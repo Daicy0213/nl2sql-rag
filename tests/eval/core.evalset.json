@@ -1,0 +1,165 @@
+{
+  "eval_set_id": "nl2sql_core",
+  "name": "NL2SQL core tool trajectory",
+  "description": "Real DeepSeek and Qwen calls; verify retrieval happens before SQL execution.",
+  "eval_cases": [
+    {
+      "eval_id": "paid_orders_august",
+      "conversation": [{
+        "user_content": {"role": "user", "parts": [{"text": "2026年8月有多少笔已支付订单？"}]},
+        "intermediate_data": {"tool_uses": [
+          {"name": "search_knowledge", "args": {}},
+          {"name": "execute_sql", "args": {}}
+        ]}
+      }]
+    },
+    {
+      "eval_id": "east_net_sales_august",
+      "conversation": [{
+        "user_content": {"role": "user", "parts": [{"text": "2026年8月华东地区的净销售额是多少？"}]},
+        "intermediate_data": {"tool_uses": [
+          {"name": "search_knowledge", "args": {}},
+          {"name": "execute_sql", "args": {}}
+        ]}
+      }]
+    },
+    {
+      "eval_id": "orders_by_region",
+      "conversation": [{
+        "user_content": {"role": "user", "parts": [{"text": "按地区统计2026年8月的非取消订单数。"}]},
+        "intermediate_data": {"tool_uses": [
+          {"name": "search_knowledge", "args": {}},
+          {"name": "execute_sql", "args": {}}
+        ]}
+      }]
+    },
+    {
+      "eval_id": "category_units",
+      "conversation": [{
+        "user_content": {"role": "user", "parts": [{"text": "2026年8月各商品品类卖出多少件？排除取消订单。"}]},
+        "intermediate_data": {"tool_uses": [
+          {"name": "search_knowledge", "args": {}},
+          {"name": "execute_sql", "args": {}}
+        ]}
+      }]
+    },
+    {
+      "eval_id": "follow_up_region",
+      "conversation": [
+        {
+          "user_content": {"role": "user", "parts": [{"text": "2026年8月华东地区的订单数是多少？"}]},
+          "intermediate_data": {"tool_uses": [
+            {"name": "search_knowledge", "args": {}},
+            {"name": "execute_sql", "args": {}}
+          ]}
+        },
+        {
+          "user_content": {"role": "user", "parts": [{"text": "那华南呢？"}]},
+          "intermediate_data": {"tool_uses": [
+            {"name": "execute_sql", "args": {}}
+          ]}
+        }
+      ]
+    },
+    {
+      "eval_id": "member_sales_august",
+      "conversation": [{
+        "user_content": {"role": "user", "parts": [{"text": "2026年8月各会员等级的成功支付销售额是多少？按下单时等级统计。"}]},
+        "intermediate_data": {"tool_uses": [
+          {"name": "search_knowledge", "args": {}},
+          {"name": "execute_sql", "args": {}}
+        ]}
+      }]
+    },
+    {
+      "eval_id": "current_membership_counts",
+      "conversation": [{
+        "user_content": {"role": "user", "parts": [{"text": "当前普通、黄金、白金、钻石会员分别有多少人？"}]},
+        "intermediate_data": {"tool_uses": [
+          {"name": "search_knowledge", "args": {}},
+          {"name": "execute_sql", "args": {}}
+        ]}
+      }]
+    },
+    {
+      "eval_id": "membership_discount_august",
+      "conversation": [{
+        "user_content": {"role": "user", "parts": [{"text": "2026年8月各会员等级获得的会员优惠金额是多少？"}]},
+        "intermediate_data": {"tool_uses": [
+          {"name": "search_knowledge", "args": {}},
+          {"name": "execute_sql", "args": {}}
+        ]}
+      }]
+    },
+    {
+      "eval_id": "payment_retry_success",
+      "conversation": [{
+        "user_content": {"role": "user", "parts": [{"text": "有多少订单曾支付失败但后来成功支付？"}]},
+        "intermediate_data": {"tool_uses": [
+          {"name": "search_knowledge", "args": {}},
+          {"name": "execute_sql", "args": {}}
+        ]}
+      }]
+    },
+    {
+      "eval_id": "category_refund_item_rate",
+      "conversation": [{
+        "user_content": {"role": "user", "parts": [{"text": "按一级品类统计已批准退款件数占销售件数的比例。"}]},
+        "intermediate_data": {"tool_uses": [
+          {"name": "search_knowledge", "args": {}},
+          {"name": "execute_sql", "args": {}}
+        ]}
+      }]
+    },
+    {
+      "eval_id": "on_time_delivery_by_channel",
+      "conversation": [{
+        "user_content": {"role": "user", "parts": [{"text": "各成交渠道已送达包裹的准时送达率是多少？"}]},
+        "intermediate_data": {"tool_uses": [
+          {"name": "search_knowledge", "args": {}},
+          {"name": "execute_sql", "args": {}}
+        ]}
+      }]
+    },
+    {
+      "eval_id": "campaign_roas",
+      "conversation": [{
+        "user_content": {"role": "user", "parts": [{"text": "计算每个营销活动归因成功支付收入除以广告花费的ROAS。"}]},
+        "intermediate_data": {"tool_uses": [
+          {"name": "search_knowledge", "args": {}},
+          {"name": "execute_sql", "args": {}}
+        ]}
+      }]
+    },
+    {
+      "eval_id": "session_conversion_august",
+      "conversation": [{
+        "user_content": {"role": "user", "parts": [{"text": "2026年8月各线上渠道的会话下单转化率是多少？"}]},
+        "intermediate_data": {"tool_uses": [
+          {"name": "search_knowledge", "args": {}},
+          {"name": "execute_sql", "args": {}}
+        ]}
+      }]
+    },
+    {
+      "eval_id": "first_purchase_by_acquisition_channel",
+      "conversation": [{
+        "user_content": {"role": "user", "parts": [{"text": "2026年8月首购客户按最初获客渠道分别有多少人？"}]},
+        "intermediate_data": {"tool_uses": [
+          {"name": "search_knowledge", "args": {}},
+          {"name": "execute_sql", "args": {}}
+        ]}
+      }]
+    },
+    {
+      "eval_id": "gross_margin_by_subcategory",
+      "conversation": [{
+        "user_content": {"role": "user", "parts": [{"text": "2026年8月各二级品类按历史成交价和历史成本计算的商品毛利率是多少？"}]},
+        "intermediate_data": {"tool_uses": [
+          {"name": "search_knowledge", "args": {}},
+          {"name": "execute_sql", "args": {}}
+        ]}
+      }]
+    }
+  ]
+}

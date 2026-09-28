@@ -1,0 +1,238 @@
+{
+  "captured_at": "2026-09-28",
+  "corpus_size": 109,
+  "results": [
+    {
+      "question": "2026 年 8 月华东地区的净销售额是多少？",
+      "ok": true,
+      "doc_ids": [
+        "metric.net_sales",
+        "metric.gross_sales",
+        "table.customers",
+        "example.region_net_sales",
+        "rule.sales_caliber",
+        "metric.campaign_sales",
+        "join.refunds_orders",
+        "table.campaigns",
+        "table.order_discounts",
+        "table.order_items",
+        "table.orders",
+        "table.payments",
+        "table.products",
+        "table.refunds"
+      ],
+      "context_chars": 3314,
+      "ms": 531.4
+    },
+    {
+      "question": "2026年8月有多少笔已支付订单？",
+      "ok": true,
+      "doc_ids": [
+        "table.payments",
+        "table.orders",
+        "example.region_net_sales",
+        "metric.order_count",
+        "enum.order_status_flow",
+        "rule.cancelled_orders",
+        "rule.time",
+        "table.customers",
+        "table.refunds",
+        "table.shipments"
+      ],
+      "context_chars": 2280,
+      "ms": 107.5
+    },
+    {
+      "question": "按地区统计2026年8月的非取消订单数。",
+      "ok": true,
+      "doc_ids": [
+        "metric.order_count",
+        "table.orders",
+        "table.customers",
+        "rule.cancelled_orders",
+        "example.region_net_sales",
+        "join.customer_orders",
+        "metric.active_customers",
+        "table.payments",
+        "table.refunds"
+      ],
+      "context_chars": 1817,
+      "ms": 200.2
+    },
+    {
+      "question": "2026年8月各商品品类卖出多少件？排除取消订单。",
+      "ok": true,
+      "doc_ids": [
+        "metric.units_sold",
+        "table.products",
+        "table.orders",
+        "metric.order_count",
+        "rule.cancelled_orders",
+        "example.category_rollup",
+        "join.order_products",
+        "table.order_items",
+        "table.payments",
+        "table.product_categories"
+      ],
+      "context_chars": 2245,
+      "ms": 140.2
+    },
+    {
+      "question": "退款率是多少？",
+      "ok": true,
+      "doc_ids": [
+        "metric.refund_rate_amount",
+        "table.refunds",
+        "metric.refund_rate_orders",
+        "metric.return_rate",
+        "rule.refund_status",
+        "metric.refund_amount",
+        "enum.refund_reasons",
+        "table.orders",
+        "table.payments",
+        "table.shipments"
+      ],
+      "context_chars": 1985,
+      "ms": 120.4
+    },
+    {
+      "question": "平均客单价是多少？",
+      "ok": true,
+      "doc_ids": [
+        "metric.aov",
+        "metric.per_customer_spend",
+        "table.order_items",
+        "metric.gross_sales",
+        "metric.item_sales",
+        "metric.gmv_list",
+        "metric.order_count",
+        "table.customers",
+        "table.orders",
+        "table.payments",
+        "table.products"
+      ],
+      "context_chars": 2154,
+      "ms": 107.8
+    },
+    {
+      "question": "最近30天的销售额是多少？",
+      "ok": true,
+      "doc_ids": [
+        "metric.gross_sales",
+        "rule.time",
+        "metric.net_sales",
+        "metric.units_sold",
+        "example.region_net_sales",
+        "metric.campaign_sales",
+        "rule.sales_caliber",
+        "table.campaigns",
+        "table.customers",
+        "table.order_discounts",
+        "table.order_items",
+        "table.orders",
+        "table.payments",
+        "table.products",
+        "table.refunds"
+      ],
+      "context_chars": 3428,
+      "ms": 159.7
+    },
+    {
+      "question": "哪个城市的客户下单最多？",
+      "ok": true,
+      "doc_ids": [
+        "table.customers",
+        "table.orders",
+        "join.customer_orders",
+        "metric.order_count",
+        "table.order_items",
+        "metric.active_customers",
+        "metric.new_customers",
+        "table.products"
+      ],
+      "context_chars": 1614,
+      "ms": 136.8
+    },
+    {
+      "question": "各支付方式在8月的占比是多少？",
+      "ok": true,
+      "doc_ids": [
+        "enum.payment_methods",
+        "table.payments",
+        "example.channel_share",
+        "metric.channel_share",
+        "example.monthly_trend",
+        "example.region_net_sales",
+        "table.order_discounts",
+        "table.campaigns",
+        "table.channels",
+        "table.customers",
+        "table.orders",
+        "table.refunds"
+      ],
+      "context_chars": 2732,
+      "ms": 138.2
+    },
+    {
+      "question": "2026年8月的毛利率是多少？",
+      "ok": true,
+      "doc_ids": [
+        "metric.gross_margin",
+        "example.gross_margin",
+        "table.fiscal_calendar",
+        "example.monthly_trend",
+        "metric.gross_sales",
+        "example.region_net_sales",
+        "rule.sales_caliber",
+        "table.customers",
+        "table.order_discounts",
+        "table.order_items",
+        "table.orders",
+        "table.payments",
+        "table.product_suppliers",
+        "table.products",
+        "table.refunds"
+      ],
+      "context_chars": 3723,
+      "ms": 396.1
+    },
+    {
+      "question": "各渠道的订单量分布如何？",
+      "ok": true,
+      "doc_ids": [
+        "metric.order_count",
+        "table.channels",
+        "table.orders",
+        "glossary.quantity_terms",
+        "join.orders_channels",
+        "table.order_items",
+        "metric.channel_share",
+        "table.payments",
+        "table.products"
+      ],
+      "context_chars": 1881,
+      "ms": 127.0
+    },
+    {
+      "question": "复购率是多少？",
+      "ok": true,
+      "doc_ids": [
+        "metric.repeat_rate",
+        "example.repeat_purchase",
+        "metric.active_customers",
+        "metric.refund_rate_orders",
+        "metric.return_rate",
+        "table.product_reviews",
+        "glossary.customer_slang",
+        "table.customers",
+        "table.orders",
+        "table.payments",
+        "table.products",
+        "table.refunds",
+        "table.shipments"
+      ],
+      "context_chars": 2802,
+      "ms": 173.0
+    }
+  ]
+}

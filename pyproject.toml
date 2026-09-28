@@ -1,0 +1,33 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "nl2sql-rag-teaching"
+version = "0.1.0"
+description = "A practical ADK NL2SQL application with DeepSeek, Qwen embeddings, and pgvector"
+readme = "README.md"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+  "google-adk[eval]>=2.6,<3",
+  "litellm>=1.84,<2",
+  "dashscope>=1.25,<2",
+  "psycopg[binary]>=3.2,<4",
+  "pgvector>=0.4,<1",
+  "sqlglot>=27,<30",
+  "pydantic-settings>=2.10,<3",
+  "tenacity>=9,<10",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<10", "pytest-asyncio>=0.25,<2", "jupyterlab>=4,<5", "ipykernel>=6,<8"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/nl2sql", "nl2sql_agent"]
+
+[tool.uv]
+cache-dir = ".uv-cache"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["integration: requires running PostgreSQL", "online: requires external APIs"]

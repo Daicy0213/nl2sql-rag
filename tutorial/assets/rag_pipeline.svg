@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 432" role="img" aria-labelledby="title desc">
+  <title id="title">RAG 工程链</title>
+  <desc id="desc">离线阶段从知识源经过清洗切分、嵌入和索引；在线阶段从用户问题经过检索和证据组织，交给生成器或 SQL 工具，并将评估反馈到知识设计。</desc>
+  <defs>
+    <style>
+      .bg{fill:#f8fafc}.offline{fill:#e0f2fe;stroke:#38bdf8;stroke-width:2}.online{fill:#ecfdf5;stroke:#34d399;stroke-width:2}.check{fill:#fff7ed;stroke:#fb923c;stroke-width:2}.t{font:600 19px 'Microsoft YaHei','Noto Sans CJK SC',sans-serif;fill:#0f172a}.s{font:14px 'Microsoft YaHei','Noto Sans CJK SC',sans-serif;fill:#475569}.head{font:700 23px 'Microsoft YaHei','Noto Sans CJK SC',sans-serif;fill:#0f172a}.arrow{stroke:#64748b;stroke-width:3;fill:none;marker-end:url(#tip)}.feedback{stroke:#f97316;stroke-width:2.5;fill:none;marker-end:url(#tip);stroke-dasharray:8 6}
+    </style>
+    <marker id="tip" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#64748b"/></marker>
+  </defs>
+  <rect class="bg" width="1120" height="432" rx="18"/>
+  <text class="head" x="34" y="44">从知识到可核验结果</text>
+  <text class="s" x="34" y="70">离线准备知识；在线回答问题；评估驱动下一轮迭代</text>
+  <text class="s" x="36" y="113">离线</text>
+  <rect class="offline" x="94" y="86" width="174" height="89" rx="14"/><text class="t" x="114" y="121">知识源</text><text class="s" x="114" y="148">文档、知识卡、表结构</text>
+  <path class="arrow" d="M270 130 H305"/>
+  <rect class="offline" x="312" y="86" width="174" height="89" rx="14"/><text class="t" x="332" y="121">清洗与切分</text><text class="s" x="332" y="148">口径、元数据、版本</text>
+  <path class="arrow" d="M488 130 H523"/>
+  <rect class="offline" x="530" y="86" width="174" height="89" rx="14"/><text class="t" x="550" y="121">嵌入与索引</text><text class="s" x="550" y="148">向量、词法、权限</text>
+  <text class="s" x="36" y="263">在线</text>
+  <rect class="online" x="94" y="232" width="174" height="89" rx="14"/><text class="t" x="114" y="267">用户问题</text><text class="s" x="114" y="294">意图、时间、实体</text>
+  <path class="arrow" d="M270 276 H305"/>
+  <rect class="online" x="312" y="232" width="174" height="89" rx="14"/><text class="t" x="332" y="267">检索与排序</text><text class="s" x="332" y="294">召回、融合、重排</text>
+  <path class="arrow" d="M488 276 H523"/>
+  <rect class="online" x="530" y="232" width="174" height="89" rx="14"/><text class="t" x="550" y="267">证据组织</text><text class="s" x="550" y="294">引用、去重、预算</text>
+  <path class="arrow" d="M706 276 H741"/>
+  <rect class="online" x="748" y="232" width="174" height="89" rx="14"/><text class="t" x="768" y="267">生成与工具</text><text class="s" x="768" y="294">回答或受控 SQL</text>
+  <path class="arrow" d="M924 276 H959"/>
+  <rect class="check" x="966" y="232" width="134" height="89" rx="14"/><text class="t" x="985" y="267">核验结果</text><text class="s" x="985" y="294">事实与权限</text>
+  <path class="arrow" d="M617 177 V225"/>
+  <rect class="check" x="748" y="86" width="352" height="89" rx="14"/><text class="t" x="768" y="121">评估与观测</text><text class="s" x="768" y="148">检索命中、答案正确、延迟、成本、安全</text>
+  <path class="feedback" d="M924 228 V185"/>
+  <path class="feedback" d="M750 130 H722"/>
+  <text class="s" x="98" y="387">关键：把“找到相关内容”与“得到可执行、可溯源的答案”分别验证。</text>
+</svg>

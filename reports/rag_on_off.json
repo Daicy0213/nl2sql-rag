@@ -1,0 +1,195 @@
+[
+  {
+    "id": "net_sales_east_august",
+    "question": "2026 年 8 月华东地区的净销售额是多少？",
+    "defines": "净销售额口径：实收金额扣减 APPROVED 退款",
+    "golden": "11261.00",
+    "arms": {
+      "rag": {
+        "match": true,
+        "value": "11261.00",
+        "sql": "SELECT SUM(p.amount - COALESCE(r.refund_amount, 0)) AS net_sales\nFROM analytics.payments p\nJOIN analytics.orders o ON o.order_id = p.order_id\nJOIN analytics.customers c ON c.customer_id = o.customer_id\nLEFT JOIN (\n  SELECT order_id, SUM(amount) AS refund_amount\n  FROM analytics.refunds\n  WHERE status = 'APPROVED'\n  GROUP BY order_id\n) r ON r.order_id = p.order_id\nWHERE p.status = 'SUCCEEDED'\n  AND p.paid_at >= TIMESTAMPTZ '2026-08-01 00:00:00+00'\n  AND p.paid_at <  TIMESTAMPTZ '2026-09-01 00:00:00+00'\n  AND c.region = '华东';",
+        "sql_matched": "SELECT SUM(p.amount - COALESCE(r.refund_amount, 0)) AS net_sales\nFROM analytics.payments p\nJOIN analytics.orders o ON o.order_id = p.order_id\nJOIN analytics.customers c ON c.customer_id = o.customer_id\nLEFT JOIN (\n  SELECT order_id, SUM(amount) AS refund_amount\n  FROM analytics.refunds\n  WHERE status = 'APPROVED'\n  GROUP BY order_id\n) r ON r.order_id = p.order_id\nWHERE p.status = 'SUCCEEDED'\n  AND p.paid_at >= TIMESTAMPTZ '2026-08-01 00:00:00+00'\n  AND p.paid_at <  TIMESTAMPTZ '2026-09-01 00:00:00+00'\n  AND c.region = '华东';",
+        "sql_all": [
+          "SELECT SUM(p.amount - COALESCE(r.refund_amount, 0)) AS net_sales\nFROM analytics.payments p\nJOIN analytics.orders o ON o.order_id = p.order_id\nJOIN analytics.customers c ON c.customer_id = o.customer_id\nLEFT JOIN (\n  SELECT order_id, SUM(amount) AS refund_amount\n  FROM analytics.refunds\n  WHERE status = 'APPROVED'\n  GROUP BY order_id\n) r ON r.order_id = p.order_id\nWHERE p.status = 'SUCCEEDED'\n  AND p.paid_at >= TIMESTAMPTZ '2026-08-01 00:00:00+00'\n  AND p.paid_at <  TIMESTAMPTZ '2026-09-01 00:00:00+00'\n  AND c.region = '华东';"
+        ]
+      },
+      "no_rag": {
+        "match": false,
+        "value": "2025-12",
+        "sql": "SELECT to_char(date_trunc('month', ordered_at), 'YYYY-MM') AS m, count(*) AS orders_cnt, count(DISTINCT c.region) AS regions FROM orders o JOIN customers c ON c.customer_id = o.customer_id WHERE ordered_at >= '2026-01-01+08' AND ordered_at < '2027-01-01+08' GROUP BY 1 ORDER BY 1",
+        "sql_matched": null,
+        "sql_all": [
+          "SELECT table_name FROM information_schema.tables WHERE table_schema NOT IN ('pg_catalog','information_schema') ORDER BY table_name",
+          "SELECT 'customers.region' AS field, region AS value, count(*) AS cnt FROM customers GROUP BY 1,2 UNION ALL SELECT 'orders.status', status, count(*) FROM orders GROUP BY 1,2 UNION ALL SELECT 'refunds.status', status, count(*) FROM refunds GROUP BY 1,2 UNION ALL SELECT 'payments.status', status, count(*) FROM payments GROUP BY 1,2 ORDER BY 1,2",
+          "SELECT min(ordered_at) AS min_ordered, max(ordered_at) AS max_ordered, count(*) AS n FROM orders",
+          "SELECT region, count(*) AS cnt FROM customers GROUP BY region ORDER BY region",
+          "SELECT status, count(*) AS cnt FROM orders GROUP BY status ORDER BY status",
+          "SELECT status, count(*) AS cnt FROM refunds GROUP BY status ORDER BY status",
+          "SELECT status, count(*) AS cnt FROM payments GROUP BY status ORDER BY status",
+          "SELECT sum(oi.quantity * oi.unit_price) AS gross_sales, count(DISTINCT o.order_id) AS orders_cnt, count(*) AS items FROM order_items oi JOIN orders o ON o.order_id = oi.order_id JOIN customers c ON c.customer_id = o.customer_id WHERE c.region = '华东' AND o.status <> 'CANCELLED' AND o.ordered_at >= '2026-08-01 00:00:00+08' AND o.ordered_at < '2026-09-01 00:00:00+08'",
+          "SELECT sum(r.amount) AS refund_amount, count(*) AS refund_cnt FROM refunds r JOIN orders o ON o.order_id = r.order_id JOIN customers c ON c.customer_id = o.customer_id WHERE c.region = '华东' AND r.status = 'APPROVED' AND r.refunded_at >= '2026-08-01 00:00:00+08' AND r.refunded_at < '2026-09-01 00:00:00+08'",
+          "SELECT extract(hour FROM ordered_at) AS h, count(*) AS cnt FROM orders GROUP BY 1 ORDER BY 1",
+          "SELECT sum(oi.quantity * oi.unit_price) AS gross_sales_utc, count(DISTINCT o.order_id) AS orders_cnt FROM order_items oi JOIN orders o ON o.order_id = oi.order_id JOIN customers c ON c.customer_id = o.customer_id WHERE c.region = '华东' AND o.status <> 'CANCELLED' AND o.ordered_at >= '2026-08-01 00:00:00+00' AND o.ordered_at < '2026-09-01 00:00:00+00'",
+          "SELECT sum(r.amount) AS refund_on_aug_orders, count(*) AS cnt FROM refunds r JOIN orders o ON o.order_id = r.order_id JOIN customers c ON c.customer_id = o.customer_id WHERE c.region = '华东' AND r.status = 'APPROVED' AND o.status <> 'CANCELLED' AND o.ordered_at >= '2026-08-01 00:00:00+08' AND o.ordered_at < '2026-09-01 00:00:00+08'",
+          "SELECT to_char(date_trunc('month', ordered_at), 'YYYY-MM') AS m, count(*) AS orders_cnt, count(DISTINCT c.region) AS regions FROM orders o JOIN customers c ON c.customer_id = o.customer_id WHERE ordered_at >= '2026-01-01+08' AND ordered_at < '2027-01-01+08' GROUP BY 1 ORDER BY 1"
+        ]
+      }
+    }
+  },
+  {
+    "id": "receipts_2025",
+    "question": "2025 年全年的实收金额是多少？",
+    "defines": "实收金额口径（对照组：不依赖复杂定义）",
+    "golden": "33412444.35",
+    "arms": {
+      "rag": {
+        "match": true,
+        "value": "33412444.35",
+        "sql": "SELECT SUM(amount) AS actual_received_amount, COUNT(*) AS successful_payment_cnt, MIN(paid_at) AS first_paid_at, MAX(paid_at) AS last_paid_at FROM analytics.payments WHERE status = 'SUCCEEDED' AND paid_at >= '2025-01-01' AND paid_at < '2026-01-01';",
+        "sql_matched": "SELECT SUM(amount) AS actual_received_amount, COUNT(*) AS successful_payment_cnt, MIN(paid_at) AS first_paid_at, MAX(paid_at) AS last_paid_at FROM analytics.payments WHERE status = 'SUCCEEDED' AND paid_at >= '2025-01-01' AND paid_at < '2026-01-01';",
+        "sql_all": [
+          "SELECT SUM(amount) AS actual_received_amount, COUNT(*) AS successful_payment_cnt, MIN(paid_at) AS first_paid_at, MAX(paid_at) AS last_paid_at FROM analytics.payments WHERE status = 'SUCCEEDED' AND paid_at >= '2025-01-01' AND paid_at < '2026-01-01';"
+        ]
+      },
+      "no_rag": {
+        "match": true,
+        "value": "9084",
+        "sql": "WITH pay AS (\n  SELECT SUM(amount) AS gross\n  FROM analytics.payments\n  WHERE paid_at >= TIMESTAMP '2025-01-01 00:00:00+00' AND paid_at < TIMESTAMP '2026-01-01 00:00:00+00'\n), ref AS (\n  SELECT SUM(amount) AS refund\n  FROM analytics.refunds\n  WHERE status = 'APPROVED'\n    AND refunded_at >= TIMESTAMP '2025-01-01 00:00:00+00' AND refunded_at < TIMESTAMP '2026-01-01 00:00:00+00'\n)\nSELECT ROUND(pay.gross, 2) AS gross_paid,\n       ROUND(COALESCE(ref.refund, 0), 2) AS approved_refund,\n       ROUND(pay.gross - COALESCE(ref.refund, 0), 2) AS net_paid\nFROM pay CROSS JOIN ref",
+        "sql_matched": "SELECT COUNT(*) AS payment_cnt, ROUND(SUM(amount), 2) AS gross_paid\nFROM analytics.payments\nWHERE paid_at >= TIMESTAMP '2025-01-01 00:00:00+00' AND paid_at < TIMESTAMP '2026-01-01 00:00:00+00'",
+        "sql_all": [
+          "SELECT table_schema, table_name FROM information_schema.tables WHERE table_schema NOT IN ('pg_catalog','information_schema') ORDER BY 1,2",
+          "SELECT table_name FROM information_schema.tables WHERE table_schema = 'analytics' ORDER BY 1",
+          "SELECT status, COUNT(*) AS cnt, MIN(paid_at) AS min_paid, MAX(paid_at) AS max_paid FROM analytics.payments GROUP BY status ORDER BY cnt DESC",
+          "SELECT status, COUNT(*) AS cnt, MIN(refunded_at) AS min_t, MAX(refunded_at) AS max_t FROM analytics.refunds GROUP BY status ORDER BY cnt DESC",
+          "SELECT COUNT(*) AS payment_cnt, ROUND(SUM(amount), 2) AS gross_paid\nFROM analytics.payments\nWHERE paid_at >= TIMESTAMP '2025-01-01 00:00:00+00' AND paid_at < TIMESTAMP '2026-01-01 00:00:00+00'",
+          "SELECT COUNT(*) AS refund_cnt, ROUND(SUM(amount), 2) AS refund_amount\nFROM analytics.refunds\nWHERE status = 'APPROVED'\n  AND refunded_at >= TIMESTAMP '2025-01-01 00:00:00+00' AND refunded_at < TIMESTAMP '2026-01-01 00:00:00+00'",
+          "WITH pay AS (\n  SELECT SUM(amount) AS gross\n  FROM analytics.payments\n  WHERE paid_at >= TIMESTAMP '2025-01-01 00:00:00+00' AND paid_at < TIMESTAMP '2026-01-01 00:00:00+00'\n), ref AS (\n  SELECT SUM(amount) AS refund\n  FROM analytics.refunds\n  WHERE status = 'APPROVED'\n    AND refunded_at >= TIMESTAMP '2025-01-01 00:00:00+00' AND refunded_at < TIMESTAMP '2026-01-01 00:00:00+00'\n)\nSELECT ROUND(pay.gross, 2) AS gross_paid,\n       ROUND(COALESCE(ref.refund, 0), 2) AS approved_refund,\n       ROUND(pay.gross - COALESCE(ref.refund, 0), 2) AS net_paid\nFROM pay CROSS JOIN ref"
+        ]
+      }
+    }
+  },
+  {
+    "id": "aov_all",
+    "question": "全部订单的客单价是多少？",
+    "defines": "客单价口径：实收金额 ÷ 去重订单数",
+    "golden": "3574.7922416181767803",
+    "arms": {
+      "rag": {
+        "match": true,
+        "value": "18045",
+        "sql": "SELECT COUNT(DISTINCT o.order_id) AS all_orders, ROUND((SELECT SUM(p.amount) FROM analytics.payments p WHERE p.status = 'SUCCEEDED') / NULLIF(COUNT(DISTINCT o.order_id), 0), 2) AS aov_if_all_orders FROM analytics.orders o",
+        "sql_matched": "SELECT COUNT(DISTINCT p.order_id) AS paid_order_cnt, ROUND(SUM(p.amount), 2) AS collected_amount, ROUND(SUM(p.amount) / NULLIF(COUNT(DISTINCT p.order_id), 0), 2) AS aov FROM analytics.payments p WHERE p.status = 'SUCCEEDED'",
+        "sql_all": [
+          "SELECT COUNT(DISTINCT p.order_id) AS paid_order_cnt, ROUND(SUM(p.amount), 2) AS collected_amount, ROUND(SUM(p.amount) / NULLIF(COUNT(DISTINCT p.order_id), 0), 2) AS aov FROM analytics.payments p WHERE p.status = 'SUCCEEDED'",
+          "SELECT p.status, COUNT(*) AS payment_rows, COUNT(DISTINCT p.order_id) AS orders FROM analytics.payments p GROUP BY p.status ORDER BY payment_rows DESC",
+          "SELECT o.status, COUNT(*) AS order_cnt FROM analytics.orders o GROUP BY o.status ORDER BY order_cnt DESC",
+          "SELECT COUNT(DISTINCT o.order_id) AS all_orders, ROUND((SELECT SUM(p.amount) FROM analytics.payments p WHERE p.status = 'SUCCEEDED') / NULLIF(COUNT(DISTINCT o.order_id), 0), 2) AS aov_if_all_orders FROM analytics.orders o"
+        ]
+      },
+      "no_rag": {
+        "match": true,
+        "value": "20000",
+        "sql": "SELECT MIN(ordered_at) AS first_order_at, MAX(ordered_at) AS last_order_at, COUNT(*) AS orders FROM orders",
+        "sql_matched": "WITH oi AS (\n  SELECT oi.order_id, SUM(oi.quantity * oi.unit_price) AS item_amount\n  FROM order_items oi\n  GROUP BY oi.order_id\n)\nSELECT\n  (SELECT COUNT(*) FROM orders) AS orders_total,\n  (SELECT COUNT(*) FROM orders WHERE status <> 'CANCELLED') AS orders_not_cancelled,\n  (SELECT COUNT(DISTINCT order_id) FROM order_items) AS orders_with_items,\n  (SELECT ROUND(SUM(item_amount), 2) FROM oi) AS gmv_items_all,\n  (SELECT ROUND(AVG(item_amount), 2) FROM oi) AS aov_items_all,\n  (SELECT ROUND(SUM(oi.item_amount), 2) FROM oi JOIN orders o ON o.order_id = oi.order_id WHERE o.status <> 'CANCELLED') AS gmv_items_not_cancelled,\n  (SELECT ROUND(AVG(oi.item_amount), 2) FROM oi JOIN orders o ON o.order_id = oi.order_id WHERE o.status <> 'CANCELLED') AS aov_items_not_cancelled,\n  (SELECT ROUND(AVG(paid_amt), 2) FROM (SELECT order_id, SUM(amount) AS paid_amt FROM payments GROUP BY order_id) p) AS aov_by_payment",
+        "sql_all": [
+          "SELECT status, count(*) AS cnt FROM orders GROUP BY 1 ORDER BY 2 DESC",
+          "SELECT status, count(*) AS cnt FROM payments GROUP BY 1 ORDER BY 2 DESC",
+          "WITH oi AS (\n  SELECT oi.order_id, SUM(oi.quantity * oi.unit_price) AS item_amount\n  FROM order_items oi\n  GROUP BY oi.order_id\n)\nSELECT\n  (SELECT COUNT(*) FROM orders) AS orders_total,\n  (SELECT COUNT(*) FROM orders WHERE status <> 'CANCELLED') AS orders_not_cancelled,\n  (SELECT COUNT(DISTINCT order_id) FROM order_items) AS orders_with_items,\n  (SELECT ROUND(SUM(item_amount), 2) FROM oi) AS gmv_items_all,\n  (SELECT ROUND(AVG(item_amount), 2) FROM oi) AS aov_items_all,\n  (SELECT ROUND(SUM(oi.item_amount), 2) FROM oi JOIN orders o ON o.order_id = oi.order_id WHERE o.status <> 'CANCELLED') AS gmv_items_not_cancelled,\n  (SELECT ROUND(AVG(oi.item_amount), 2) FROM oi JOIN orders o ON o.order_id = oi.order_id WHERE o.status <> 'CANCELLED') AS aov_items_not_cancelled,\n  (SELECT ROUND(AVG(paid_amt), 2) FROM (SELECT order_id, SUM(amount) AS paid_amt FROM payments GROUP BY order_id) p) AS aov_by_payment",
+          "SELECT MIN(ordered_at) AS first_order_at, MAX(ordered_at) AS last_order_at, COUNT(*) AS orders FROM orders"
+        ]
+      }
+    }
+  },
+  {
+    "id": "refund_rate_amount_2026",
+    "question": "2026 年的退款率（金额口径）是多少？",
+    "defines": "退款率口径：APPROVED 退款 ÷ 实收，按支付时间选订单",
+    "golden": "0.05722600295283683401",
+    "arms": {
+      "rag": {
+        "match": true,
+        "value": "30983899.60",
+        "sql": "WITH paid AS (\n  SELECT p.order_id, p.amount\n  FROM analytics.payments p\n  WHERE p.status = 'SUCCEEDED'\n    AND p.paid_at >= TIMESTAMPTZ '2026-01-01 00:00:00+00'\n    AND p.paid_at <  TIMESTAMPTZ '2027-01-01 00:00:00+00'\n),\nref AS (\n  SELECT r.order_id, SUM(r.amount) AS refund_amount\n  FROM analytics.refunds r\n  WHERE r.status = 'APPROVED'\n  GROUP BY r.order_id\n)\nSELECT SUM(paid.amount) AS received_amount,\n       SUM(COALESCE(ref.refund_amount, 0)) AS approved_refund_amount,\n       COUNT(*) AS paid_orders,\n       ROUND(SUM(COALESCE(ref.refund_amount, 0)) / NULLIF(SUM(paid.amount), 0), 4) AS refund_rate_amount\nFROM paid\nLEFT JOIN ref ON ref.order_id = paid.order_id;",
+        "sql_matched": "WITH paid AS (\n  SELECT p.order_id, p.amount\n  FROM analytics.payments p\n  WHERE p.status = 'SUCCEEDED'\n    AND p.paid_at >= TIMESTAMPTZ '2026-01-01 00:00:00+00'\n    AND p.paid_at <  TIMESTAMPTZ '2027-01-01 00:00:00+00'\n),\nref AS (\n  SELECT r.order_id, SUM(r.amount) AS refund_amount\n  FROM analytics.refunds r\n  WHERE r.status = 'APPROVED'\n  GROUP BY r.order_id\n)\nSELECT SUM(paid.amount) AS received_amount,\n       SUM(COALESCE(ref.refund_amount, 0)) AS approved_refund_amount,\n       COUNT(*) AS paid_orders,\n       ROUND(SUM(COALESCE(ref.refund_amount, 0)) / NULLIF(SUM(paid.amount), 0), 4) AS refund_rate_amount\nFROM paid\nLEFT JOIN ref ON ref.order_id = paid.order_id;",
+        "sql_all": [
+          "WITH paid AS (\n  SELECT p.order_id, p.amount\n  FROM analytics.payments p\n  WHERE p.status = 'SUCCEEDED'\n    AND p.paid_at >= TIMESTAMPTZ '2026-01-01 00:00:00+00'\n    AND p.paid_at <  TIMESTAMPTZ '2027-01-01 00:00:00+00'\n),\nref AS (\n  SELECT r.order_id, SUM(r.amount) AS refund_amount\n  FROM analytics.refunds r\n  WHERE r.status = 'APPROVED'\n  GROUP BY r.order_id\n)\nSELECT SUM(paid.amount) AS received_amount,\n       SUM(COALESCE(ref.refund_amount, 0)) AS approved_refund_amount,\n       COUNT(*) AS paid_orders,\n       ROUND(SUM(COALESCE(ref.refund_amount, 0)) / NULLIF(SUM(paid.amount), 0), 4) AS refund_rate_amount\nFROM paid\nLEFT JOIN ref ON ref.order_id = paid.order_id;"
+        ]
+      },
+      "no_rag": {
+        "match": false,
+        "value": "30983899.60",
+        "sql": "SELECT\n  (SELECT sum(amount) FROM payments WHERE paid_at >= '2026-01-01' AND paid_at < '2027-01-01') AS pay_amt_2026,\n  (SELECT sum(amount) FROM refunds WHERE status = 'APPROVED' AND refunded_at >= '2026-01-01' AND refunded_at < '2027-01-01') AS approved_refund_2026,\n  (SELECT sum(amount) FROM refunds WHERE refunded_at >= '2026-01-01' AND refunded_at < '2027-01-01') AS all_refund_2026,\n  (SELECT sum(r.amount) FROM refunds r JOIN payments p ON p.order_id = r.order_id\n     WHERE r.status = 'APPROVED' AND p.paid_at >= '2026-01-01' AND p.paid_at < '2027-01-01') AS approved_refund_of_2026_pays;",
+        "sql_matched": null,
+        "sql_all": [
+          "SELECT 'refunds' AS t, status, count(*) AS cnt, sum(amount) AS amt, min(refunded_at) AS min_d, max(refunded_at) AS max_d FROM refunds GROUP BY status\nUNION ALL\nSELECT 'payments', status, count(*), sum(amount), min(paid_at), max(paid_at) FROM payments GROUP BY status\nORDER BY t, status;",
+          "SELECT status, count(*) AS cnt, sum(amount) AS amt, min(refunded_at) AS min_d, max(refunded_at) AS max_d FROM refunds GROUP BY status ORDER BY status;",
+          "SELECT status, count(*) AS cnt, sum(amount) AS amt, min(paid_at) AS min_d, max(paid_at) AS max_d FROM payments GROUP BY status ORDER BY status;",
+          "SELECT\n  (SELECT sum(amount) FROM payments WHERE paid_at >= '2026-01-01' AND paid_at < '2027-01-01') AS pay_amt_2026,\n  (SELECT sum(amount) FROM refunds WHERE status = 'APPROVED' AND refunded_at >= '2026-01-01' AND refunded_at < '2027-01-01') AS approved_refund_2026,\n  (SELECT sum(amount) FROM refunds WHERE refunded_at >= '2026-01-01' AND refunded_at < '2027-01-01') AS all_refund_2026,\n  (SELECT sum(r.amount) FROM refunds r JOIN payments p ON p.order_id = r.order_id\n     WHERE r.status = 'APPROVED' AND p.paid_at >= '2026-01-01' AND p.paid_at < '2027-01-01') AS approved_refund_of_2026_pays;"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ontime_count_june",
+    "question": "2026 年 6 月发出的包裹中，有多少个是在下单后 48 小时内发出的？",
+    "defines": "发货时效口径：shipped_at − ordered_at ≤ 48 小时",
+    "golden": "475",
+    "arms": {
+      "rag": {
+        "match": true,
+        "value": "688",
+        "sql": "SELECT COUNT(*) AS shipped_packages,\n       COUNT(*) FILTER (WHERE EXTRACT(EPOCH FROM s.shipped_at - o.ordered_at) / 3600 <= 48) AS within_48h,\n       COUNT(*) FILTER (WHERE s.status = 'DELIVERED' AND EXTRACT(EPOCH FROM s.shipped_at - o.ordered_at) / 3600 <= 48) AS within_48h_delivered_only\nFROM analytics.shipments s\nJOIN analytics.orders o ON o.order_id = s.order_id\nWHERE s.shipped_at >= '2026-06-01' AND s.shipped_at < '2026-07-01'\n  AND o.status <> 'CANCELLED';",
+        "sql_matched": "SELECT COUNT(*) AS shipped_packages,\n       COUNT(*) FILTER (WHERE EXTRACT(EPOCH FROM s.shipped_at - o.ordered_at) / 3600 <= 48) AS within_48h,\n       COUNT(*) FILTER (WHERE s.status = 'DELIVERED' AND EXTRACT(EPOCH FROM s.shipped_at - o.ordered_at) / 3600 <= 48) AS within_48h_delivered_only\nFROM analytics.shipments s\nJOIN analytics.orders o ON o.order_id = s.order_id\nWHERE s.shipped_at >= '2026-06-01' AND s.shipped_at < '2026-07-01'\n  AND o.status <> 'CANCELLED';",
+        "sql_all": [
+          "SELECT COUNT(*) AS shipped_packages,\n       COUNT(*) FILTER (WHERE EXTRACT(EPOCH FROM s.shipped_at - o.ordered_at) / 3600 <= 48) AS within_48h,\n       COUNT(*) FILTER (WHERE s.status = 'DELIVERED' AND EXTRACT(EPOCH FROM s.shipped_at - o.ordered_at) / 3600 <= 48) AS within_48h_delivered_only\nFROM analytics.shipments s\nJOIN analytics.orders o ON o.order_id = s.order_id\nWHERE s.shipped_at >= '2026-06-01' AND s.shipped_at < '2026-07-01'\n  AND o.status <> 'CANCELLED';"
+        ]
+      },
+      "no_rag": {
+        "match": true,
+        "value": "688",
+        "sql": "SELECT count(*) AS june_shipments_left,\n       count(DISTINCT s.order_id) AS distinct_orders,\n       count(*) FILTER (WHERE o.order_id IS NULL) AS no_matching_order\nFROM shipments s LEFT JOIN orders o ON o.order_id = s.order_id\nWHERE s.shipped_at >= TIMESTAMPTZ '2026-06-01 00:00:00+00' AND s.shipped_at < TIMESTAMPTZ '2026-07-01 00:00:00+00'",
+        "sql_matched": "SELECT\n  count(*) AS total_shipped,\n  count(*) FILTER (WHERE s.shipped_at - o.ordered_at <= INTERVAL '48 hours') AS within_48h,\n  count(*) FILTER (WHERE s.shipped_at <= o.ordered_at) AS negative_lag,\n  round(avg(EXTRACT(EPOCH FROM (s.shipped_at - o.ordered_at))/3600.0)::numeric, 1) AS avg_hours\nFROM shipments s JOIN orders o ON o.order_id = s.order_id\nWHERE s.shipped_at >= TIMESTAMPTZ '2026-06-01 00:00:00+00' AND s.shipped_at < TIMESTAMPTZ '2026-07-01 00:00:00+00'",
+        "sql_all": [
+          "SELECT s.status AS shipment_status, o.status AS order_status, count(*) AS cnt\nFROM shipments s JOIN orders o ON o.order_id = s.order_id\nWHERE s.shipped_at >= TIMESTAMPTZ '2026-06-01 00:00:00+00' AND s.shipped_at < TIMESTAMPTZ '2026-07-01 00:00:00+00'\nGROUP BY 1,2 ORDER BY 3 DESC",
+          "SELECT\n  count(*) AS total_shipped,\n  count(*) FILTER (WHERE s.shipped_at - o.ordered_at <= INTERVAL '48 hours') AS within_48h,\n  count(*) FILTER (WHERE s.shipped_at <= o.ordered_at) AS negative_lag,\n  round(avg(EXTRACT(EPOCH FROM (s.shipped_at - o.ordered_at))/3600.0)::numeric, 1) AS avg_hours\nFROM shipments s JOIN orders o ON o.order_id = s.order_id\nWHERE s.shipped_at >= TIMESTAMPTZ '2026-06-01 00:00:00+00' AND s.shipped_at < TIMESTAMPTZ '2026-07-01 00:00:00+00'",
+          "SELECT count(*) AS june_shipments_left,\n       count(DISTINCT s.order_id) AS distinct_orders,\n       count(*) FILTER (WHERE o.order_id IS NULL) AS no_matching_order\nFROM shipments s LEFT JOIN orders o ON o.order_id = s.order_id\nWHERE s.shipped_at >= TIMESTAMPTZ '2026-06-01 00:00:00+00' AND s.shipped_at < TIMESTAMPTZ '2026-07-01 00:00:00+00'"
+        ]
+      }
+    }
+  },
+  {
+    "id": "top_margin_category",
+    "question": "2026 年毛利率最高的二级品类是哪个？",
+    "defines": "毛利率口径：成交金额减主供应商采购成本",
+    "golden": "经济管理",
+    "arms": {
+      "rag": {
+        "match": true,
+        "value": "经济管理",
+        "sql": "SELECT pc.category_name AS second_level_category,\n       SUM(oi.quantity * oi.unit_price) AS revenue,\n       SUM(oi.quantity * ps.purchase_price) AS cost,\n       (SUM(oi.quantity * oi.unit_price) - SUM(oi.quantity * ps.purchase_price))\n         / NULLIF(SUM(oi.quantity * oi.unit_price), 0) AS gross_margin_rate\nFROM analytics.order_items oi\nJOIN analytics.orders o ON o.order_id = oi.order_id\nJOIN analytics.products p ON p.product_id = oi.product_id\nJOIN analytics.product_categories pc ON pc.category_id = p.category_id AND pc.level = 2\nJOIN analytics.product_suppliers ps ON ps.product_id = oi.product_id AND ps.is_primary\nWHERE o.status <> 'CANCELLED'\n  AND o.ordered_at >= TIMESTAMPTZ '2026-01-01'\n  AND o.ordered_at < TIMESTAMPTZ '2027-01-01'\nGROUP BY pc.category_name\nORDER BY gross_margin_rate DESC",
+        "sql_matched": "SELECT pc.category_name AS second_level_category,\n       SUM(oi.quantity * oi.unit_price) AS revenue,\n       SUM(oi.quantity * ps.purchase_price) AS cost,\n       (SUM(oi.quantity * oi.unit_price) - SUM(oi.quantity * ps.purchase_price))\n         / NULLIF(SUM(oi.quantity * oi.unit_price), 0) AS gross_margin_rate\nFROM analytics.order_items oi\nJOIN analytics.orders o ON o.order_id = oi.order_id\nJOIN analytics.products p ON p.product_id = oi.product_id\nJOIN analytics.product_categories pc ON pc.category_id = p.category_id AND pc.level = 2\nJOIN analytics.product_suppliers ps ON ps.product_id = oi.product_id AND ps.is_primary\nWHERE o.status <> 'CANCELLED'\n  AND o.ordered_at >= TIMESTAMPTZ '2026-01-01'\n  AND o.ordered_at < TIMESTAMPTZ '2027-01-01'\nGROUP BY pc.category_name\nORDER BY gross_margin_rate DESC",
+        "sql_all": [
+          "SELECT pc.category_name AS second_level_category,\n       SUM(oi.quantity * oi.unit_price) AS revenue,\n       SUM(oi.quantity * ps.purchase_price) AS cost,\n       (SUM(oi.quantity * oi.unit_price) - SUM(oi.quantity * ps.purchase_price))\n         / NULLIF(SUM(oi.quantity * oi.unit_price), 0) AS gross_margin_rate\nFROM analytics.order_items oi\nJOIN analytics.orders o ON o.order_id = oi.order_id\nJOIN analytics.products p ON p.product_id = oi.product_id\nJOIN analytics.product_categories pc ON pc.category_id = p.category_id AND pc.level = 2\nJOIN analytics.product_suppliers ps ON ps.product_id = oi.product_id AND ps.is_primary\nWHERE o.status <> 'CANCELLED'\n  AND o.ordered_at >= TIMESTAMPTZ '2026-01-01'\n  AND o.ordered_at < TIMESTAMPTZ '2027-01-01'\nGROUP BY pc.category_name\nORDER BY gross_margin_rate DESC"
+        ]
+      },
+      "no_rag": {
+        "match": true,
+        "value": "经济管理",
+        "sql": "SELECT pc.category_name AS level2_category,\n       ROUND((SUM(oi.quantity * oi.unit_price) - SUM(oi.quantity * ps.purchase_price))\n             / SUM(oi.quantity * oi.unit_price) * 100, 2) AS gross_margin_pct_all_status\nFROM orders o\nJOIN order_items oi ON oi.order_id = o.order_id\nJOIN products p ON p.product_id = oi.product_id\nJOIN product_categories pc ON pc.category_id = p.category_id AND pc.level = 2\nJOIN product_suppliers ps ON ps.product_id = p.product_id AND ps.is_primary\nWHERE o.ordered_at >= TIMESTAMPTZ '2026-01-01 00:00:00+00'\n  AND o.ordered_at <  TIMESTAMPTZ '2027-01-01 00:00:00+00'\nGROUP BY pc.category_name\nORDER BY gross_margin_pct_all_status DESC\nLIMIT 3",
+        "sql_matched": "SELECT pc.category_name AS level2_category,\n       SUM(oi.quantity * oi.unit_price) AS revenue,\n       SUM(oi.quantity * ps.purchase_price) AS cost,\n       ROUND((SUM(oi.quantity * oi.unit_price) - SUM(oi.quantity * ps.purchase_price))\n             / SUM(oi.quantity * oi.unit_price) * 100, 2) AS gross_margin_pct\nFROM orders o\nJOIN order_items oi ON oi.order_id = o.order_id\nJOIN products p ON p.product_id = oi.product_id\nJOIN product_categories pc ON pc.category_id = p.category_id AND pc.level = 2\nJOIN product_suppliers ps ON ps.product_id = p.product_id AND ps.is_primary\nWHERE o.ordered_at >= TIMESTAMPTZ '2026-01-01 00:00:00+00'\n  AND o.ordered_at <  TIMESTAMPTZ '2027-01-01 00:00:00+00'\n  AND o.status <> 'CANCELLED'\nGROUP BY pc.category_name\nORDER BY gross_margin_pct DESC, revenue DESC",
+        "sql_all": [
+          "SELECT table_schema, table_name FROM information_schema.tables WHERE table_schema NOT IN ('pg_catalog','information_schema') ORDER BY 1,2",
+          "SELECT table_name FROM information_schema.tables WHERE table_schema = 'analytics'",
+          "SELECT c.relname FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = 'analytics' AND c.relkind IN ('r','v','m')",
+          "SELECT min(ordered_at) AS min_ts, max(ordered_at) AS max_ts, count(*) AS n, count(DISTINCT status) AS statuses FROM orders",
+          "SELECT level, count(*) AS n, count(DISTINCT parent_id) AS parents FROM product_categories GROUP BY level ORDER BY level",
+          "SELECT status, count(*) AS n FROM orders GROUP BY status ORDER BY n DESC",
+          "SELECT count(*) AS total_rows, count(DISTINCT product_id) AS products, count(*) FILTER (WHERE is_primary) AS primary_rows, count(DISTINCT product_id) FILTER (WHERE is_primary) AS primary_products FROM product_suppliers",
+          "SELECT pc.category_name AS level2_category,\n       SUM(oi.quantity * oi.unit_price) AS revenue,\n       SUM(oi.quantity * ps.purchase_price) AS cost,\n       ROUND((SUM(oi.quantity * oi.unit_price) - SUM(oi.quantity * ps.purchase_price))\n             / SUM(oi.quantity * oi.unit_price) * 100, 2) AS gross_margin_pct\nFROM orders o\nJOIN order_items oi ON oi.order_id = o.order_id\nJOIN products p ON p.product_id = oi.product_id\nJOIN product_categories pc ON pc.category_id = p.category_id AND pc.level = 2\nJOIN product_suppliers ps ON ps.product_id = p.product_id AND ps.is_primary\nWHERE o.ordered_at >= TIMESTAMPTZ '2026-01-01 00:00:00+00'\n  AND o.ordered_at <  TIMESTAMPTZ '2027-01-01 00:00:00+00'\n  AND o.status <> 'CANCELLED'\nGROUP BY pc.category_name\nORDER BY gross_margin_pct DESC, revenue DESC",
+          "SELECT pc.category_name AS level2_category,\n       ROUND((SUM(oi.quantity * oi.unit_price) - SUM(oi.quantity * ps.purchase_price))\n             / SUM(oi.quantity * oi.unit_price) * 100, 2) AS gross_margin_pct_all_status\nFROM orders o\nJOIN order_items oi ON oi.order_id = o.order_id\nJOIN products p ON p.product_id = oi.product_id\nJOIN product_categories pc ON pc.category_id = p.category_id AND pc.level = 2\nJOIN product_suppliers ps ON ps.product_id = p.product_id AND ps.is_primary\nWHERE o.ordered_at >= TIMESTAMPTZ '2026-01-01 00:00:00+00'\n  AND o.ordered_at <  TIMESTAMPTZ '2027-01-01 00:00:00+00'\nGROUP BY pc.category_name\nORDER BY gross_margin_pct_all_status DESC\nLIMIT 3"
+        ]
+      }
+    }
+  }
+]

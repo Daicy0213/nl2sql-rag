@@ -1,0 +1,10 @@
+.venv/
+.uv-cache/
+.env
+.pytest_cache/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+nl2sql_agent/.adk/
+*.egg-info/
+.adk/
