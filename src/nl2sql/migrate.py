@@ -9,6 +9,7 @@ from nl2sql.config import get_settings
 
 
 SCHEMA_FILE = Path(__file__).resolve().parents[2] / "db" / "schema.sql"
+COMMENTS_FILE = Path(__file__).resolve().parents[2] / "db" / "comments.sql"
 
 
 def migrate() -> None:
@@ -19,6 +20,7 @@ def migrate() -> None:
         raise ValueError("This teaching schema uses vector(1024); set QWEN_EMBED_DIM=1024")
     with psycopg.connect(settings.db_admin_url, autocommit=True) as conn:
         conn.execute(SCHEMA_FILE.read_text(encoding="utf-8"))
+        conn.execute(COMMENTS_FILE.read_text(encoding="utf-8"))
         exists = conn.execute(
             "SELECT 1 FROM pg_roles WHERE rolname = 'nl2sql_reader'"
         ).fetchone()

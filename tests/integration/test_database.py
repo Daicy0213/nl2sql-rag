@@ -1,7 +1,9 @@
 import psycopg
 import pytest
 from decimal import Decimal
+from psycopg import sql
 
+from nl2sql.catalog import ANALYTICS_TABLES
 from nl2sql.config import get_settings
 from nl2sql.sql_runner import run_query, safe_run_query
 
@@ -14,12 +16,93 @@ def test_seed_counts_and_readonly_role():
         assert conn.execute("SELECT COUNT(*) FROM analytics.customers").fetchone()[0] == 10_000
         assert conn.execute("SELECT COUNT(*) FROM analytics.web_sessions").fetchone()[0] == 100_000
         assert conn.execute("SELECT COUNT(*) FROM analytics.membership_tiers").fetchone()[0] == 4
+        assert conn.execute("SELECT COUNT(*) FROM analytics.fiscal_calendar").fetchone()[0] == 914
+        assert conn.execute("SELECT COUNT(*) FROM analytics.warehouses").fetchone()[0] == 6
+        assert conn.execute("SELECT COUNT(*) FROM analytics.suppliers").fetchone()[0] == 20
+        assert conn.execute("SELECT COUNT(*) FROM analytics.product_suppliers").fetchone()[0] == 1_000
+        assert conn.execute("SELECT COUNT(*) FROM analytics.inventory_snapshots").fetchone()[0] == 24_000
+        assert conn.execute("SELECT COUNT(*) FROM analytics.product_reviews").fetchone()[0] == 7_699
         with pytest.raises(psycopg.Error):
             conn.execute(
                 """INSERT INTO analytics.customers
                 (customer_id,customer_name,city,region,signup_at,customer_segment)
                 VALUES (999999,'x','x','x',now(),'MASS')"""
             )
+
+
+@pytest.mark.integration
+def test_all_catalog_tables_are_populated_and_no_legacy_objects_remain():
+    settings = get_settings()
+    with psycopg.connect(settings.db_reader_url) as conn:
+        physical_tables = {
+            row[0]
+            for row in conn.execute(
+                """SELECT table_name FROM information_schema.tables
+                WHERE table_schema='analytics' AND table_type='BASE TABLE'"""
+            )
+        }
+        assert physical_tables == ANALYTICS_TABLES | {"demo_seed_state"}
+        for table_name in sorted(ANALYTICS_TABLES):
+            count = conn.execute(
+                sql.SQL("SELECT COUNT(*) FROM analytics.{}").format(
+                    sql.Identifier(table_name)
+                )
+            ).fetchone()[0]
+            assert count > 0, f"analytics.{table_name} is unexpectedly empty"
+
+        columns = {
+            (row[0], row[1])
+            for row in conn.execute(
+                """SELECT table_name,column_name FROM information_schema.columns
+                WHERE table_schema='analytics'"""
+            )
+        }
+        assert ("product_categories", "parent_id") not in columns
+        assert ("product_categories", "level") not in columns
+        assert ("payments", "method") not in columns
+
+
+@pytest.mark.integration
+def test_every_table_and_column_has_a_database_comment():
+    with psycopg.connect(get_settings().db_reader_url) as conn:
+        missing_table_comments = conn.execute(
+            """SELECT n.nspname,c.relname
+            FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+            WHERE n.nspname IN ('analytics','rag') AND c.relkind IN ('r','p')
+              AND obj_description(c.oid,'pg_class') IS NULL"""
+        ).fetchall()
+        missing_column_comments = conn.execute(
+            """SELECT n.nspname,c.relname,a.attname
+            FROM pg_class c
+            JOIN pg_namespace n ON n.oid=c.relnamespace
+            JOIN pg_attribute a ON a.attrelid=c.oid
+            WHERE n.nspname IN ('analytics','rag') AND c.relkind IN ('r','p')
+              AND a.attnum>0 AND NOT a.attisdropped
+              AND col_description(c.oid,a.attnum) IS NULL"""
+        ).fetchall()
+    assert missing_table_comments == []
+    assert missing_column_comments == []
+
+
+@pytest.mark.integration
+def test_operational_domain_relationships_are_consistent():
+    with psycopg.connect(get_settings().db_reader_url) as conn:
+        assert conn.execute(
+            "SELECT COUNT(*) FROM analytics.shipments WHERE warehouse_id IS NULL"
+        ).fetchone()[0] == 0
+        assert conn.execute(
+            """SELECT COUNT(*) FROM (
+              SELECT product_id FROM analytics.product_suppliers
+              GROUP BY product_id HAVING COUNT(*)<>2 OR COUNT(*) FILTER (WHERE is_primary)<>1
+            ) invalid"""
+        ).fetchone()[0] == 0
+        assert conn.execute(
+            "SELECT COUNT(DISTINCT snapshot_date) FROM analytics.inventory_snapshots"
+        ).fetchone()[0] == 24
+        assert conn.execute(
+            """SELECT COUNT(*) FROM analytics.product_reviews r
+            JOIN analytics.orders o USING(order_id) WHERE o.status<>'COMPLETED'"""
+        ).fetchone()[0] == 0
 
 
 @pytest.mark.integration

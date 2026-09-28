@@ -160,6 +160,56 @@
           {"name": "execute_sql", "args": {}}
         ]}
       }]
+    },
+    {
+      "eval_id": "latest_inventory_by_warehouse",
+      "conversation": [{
+        "user_content": {"role": "user", "parts": [{"text": "最新库存快照中各仓库的库存数量和库存价值是多少？"}]},
+        "intermediate_data": {"tool_uses": [
+          {"name": "search_knowledge", "args": {}},
+          {"name": "execute_sql", "args": {}}
+        ]}
+      }]
+    },
+    {
+      "eval_id": "stockout_rate_latest_snapshot",
+      "conversation": [{
+        "user_content": {"role": "user", "parts": [{"text": "最新月末商品仓库组合的零库存率是多少？"}]},
+        "intermediate_data": {"tool_uses": [
+          {"name": "search_knowledge", "args": {}},
+          {"name": "execute_sql", "args": {}}
+        ]}
+      }]
+    },
+    {
+      "eval_id": "primary_supplier_lead_time",
+      "conversation": [{
+        "user_content": {"role": "user", "parts": [{"text": "各主供应商负责多少商品，平均供货提前期是多少天？"}]},
+        "intermediate_data": {"tool_uses": [
+          {"name": "search_knowledge", "args": {}},
+          {"name": "execute_sql", "args": {}}
+        ]}
+      }]
+    },
+    {
+      "eval_id": "category_average_rating",
+      "conversation": [{
+        "user_content": {"role": "user", "parts": [{"text": "各二级品类的商品平均评分和评价数是多少？"}]},
+        "intermediate_data": {"tool_uses": [
+          {"name": "search_knowledge", "args": {}},
+          {"name": "execute_sql", "args": {}}
+        ]}
+      }]
+    },
+    {
+      "eval_id": "sales_by_fiscal_month",
+      "conversation": [{
+        "user_content": {"role": "user", "parts": [{"text": "按财年和财月统计成功支付销售额。"}]},
+        "intermediate_data": {"tool_uses": [
+          {"name": "search_knowledge", "args": {}},
+          {"name": "execute_sql", "args": {}}
+        ]}
+      }]
     }
   ]
 }

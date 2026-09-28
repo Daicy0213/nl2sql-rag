@@ -1,4 +1,8 @@
-[
+{
+  "historical_baseline": true,
+  "captured_at": "2026-09-28",
+  "note": "扩充前数据，仅用于历史对照；当前检索结果见 retrieval_report.json。",
+  "results": [
   {
     "id": "net_sales_east_august",
     "question": "2026 年 8 月华东地区的净销售额是多少？",
@@ -192,4 +196,5 @@
       }
     }
   }
-]
+  ]
+}

@@ -34,7 +34,7 @@ def test_knowledge_catalog_has_unique_valid_dependencies():
 
 def test_retrieval_gold_has_broad_labeled_coverage():
     cases = json.loads((ROOT / "tests" / "eval" / "retrieval_gold.json").read_text(encoding="utf-8"))
-    assert len(cases) >= 120
+    assert len(cases) >= 150
     assert len({case["id"] for case in cases}) == len(cases)
     categories = {case["category"] for case in cases}
     assert {"membership", "revenue", "refunds", "fulfillment", "marketing", "ambiguity"} <= categories

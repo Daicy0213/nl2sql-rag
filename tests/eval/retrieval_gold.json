@@ -124,5 +124,39 @@
   {"id":"r117","category":"customers","question":"按地区看首购新客的标准查询步骤","relevant_docs":["example.first_purchase_cohort"],"required_tables":["orders","customers"]},
   {"id":"r118","category":"refunds","question":"二级品类的退货件数率SQL思路","relevant_docs":["example.refund_rate"],"required_tables":["refunds","refund_items","order_items","products","orders"]},
   {"id":"r119","category":"membership","question":"黄金会员95折后又参加9折活动最终怎么计算？","relevant_docs":["rule.membership_discount_order","glossary.discount_rate"],"required_tables":["membership_tiers","order_items"]},
-  {"id":"r120","category":"revenue","question":"为什么支付退款包裹活动一起连会把金额放大？","relevant_docs":["rule.preaggregate_many_to_many"],"required_tables":["payments","refunds","shipments","order_promotions"]}
+  {"id":"r120","category":"revenue","question":"为什么支付退款包裹活动一起连会把金额放大？","relevant_docs":["rule.preaggregate_many_to_many"],"required_tables":["payments","refunds","shipments","order_promotions"]},
+
+  {"id":"r121","category":"inventory","question":"当前所有仓库一共有多少在手库存？","relevant_docs":["metric.inventory_on_hand"],"required_tables":["inventory_snapshots"]},
+  {"id":"r122","category":"inventory","question":"未指定日期时当前库存应该选哪一天？","relevant_docs":["rule.latest_inventory_snapshot"],"required_tables":["inventory_snapshots"]},
+  {"id":"r123","category":"inventory","question":"把24个月的月末库存相加为什么是错的？","relevant_docs":["rule.inventory_snapshot_not_flow"],"required_tables":["inventory_snapshots"]},
+  {"id":"r124","category":"inventory","question":"最新快照各仓库的库存成本金额","relevant_docs":["example.warehouse_inventory_value"],"required_tables":["inventory_snapshots","warehouses"]},
+  {"id":"r125","category":"inventory","question":"库存价值应该用标价还是单位库存成本？","relevant_docs":["metric.inventory_value"],"required_tables":["inventory_snapshots"]},
+  {"id":"r126","category":"inventory","question":"最新月末商品仓库组合的零库存率","relevant_docs":["metric.stockout_rate"],"required_tables":["inventory_snapshots"]},
+  {"id":"r127","category":"inventory","question":"找出全仓合计库存低于20件的商品","relevant_docs":["example.low_stock_products"],"required_tables":["inventory_snapshots","products"]},
+  {"id":"r128","category":"inventory","question":"库存怎样同时关联商品名称和仓库地区？","relevant_docs":["join.inventory_product_warehouse"],"required_tables":["inventory_snapshots","products","warehouses"]},
+  {"id":"r129","category":"inventory","question":"库存快照表一行的粒度是什么？","relevant_docs":["table.inventory_snapshots"],"required_tables":["inventory_snapshots","products","warehouses"]},
+  {"id":"r130","category":"fulfillment","question":"各发货仓的已送达包裹数量","relevant_docs":["join.shipment_warehouse"],"required_tables":["shipments","warehouses"]},
+
+  {"id":"r131","category":"suppliers","question":"每个商品有多少个可选供应商？","relevant_docs":["metric.supplier_count"],"required_tables":["product_suppliers"]},
+  {"id":"r132","category":"suppliers","question":"查询商品的主供应商和采购价","relevant_docs":["rule.primary_supplier"],"required_tables":["product_suppliers"]},
+  {"id":"r133","category":"suppliers","question":"商品、供货关系和供应商应该怎样连接？","relevant_docs":["join.product_supplier"],"required_tables":["products","product_suppliers","suppliers"]},
+  {"id":"r134","category":"suppliers","question":"主供应商平均供货提前期是多少天？","relevant_docs":["metric.average_lead_time"],"required_tables":["suppliers","product_suppliers"]},
+  {"id":"r135","category":"suppliers","question":"按主供应商估算最新库存采购金额","relevant_docs":["example.supplier_purchase_cost"],"required_tables":["product_suppliers","suppliers","inventory_snapshots"]},
+  {"id":"r136","category":"suppliers","question":"商品供应商表中的is_primary代表什么？","relevant_docs":["table.product_suppliers"],"required_tables":["product_suppliers","products","suppliers"]},
+  {"id":"r137","category":"suppliers","question":"供应商的标准供货周期在哪张表？","relevant_docs":["table.suppliers"],"required_tables":["suppliers"]},
+
+  {"id":"r138","category":"reviews","question":"各商品的平均星级是多少？","relevant_docs":["metric.average_rating"],"required_tables":["product_reviews"]},
+  {"id":"r139","category":"reviews","question":"2026年8月创建了多少条商品评价？","relevant_docs":["metric.review_count"],"required_tables":["product_reviews"]},
+  {"id":"r140","category":"reviews","question":"已完成订单的评价率如何计算？","relevant_docs":["metric.review_rate"],"required_tables":["product_reviews","orders"]},
+  {"id":"r141","category":"reviews","question":"算评价率为什么不能只内连接评价表？","relevant_docs":["rule.review_denominator"],"required_tables":["product_reviews","orders"]},
+  {"id":"r142","category":"reviews","question":"评价如何连接订单客户和商品？","relevant_docs":["join.review_order_product"],"required_tables":["product_reviews","orders","products"]},
+  {"id":"r143","category":"reviews","question":"各二级品类的平均评分与评价数","relevant_docs":["example.category_rating"],"required_tables":["product_reviews","products","product_categories"]},
+  {"id":"r144","category":"reviews","question":"商品评价表的评分范围与时间字段是什么？","relevant_docs":["table.product_reviews"],"required_tables":["product_reviews","orders","products"]},
+
+  {"id":"r145","category":"fiscal","question":"2026财年具体从哪天到哪天？","relevant_docs":["rule.fiscal_year"],"required_tables":["fiscal_calendar"]},
+  {"id":"r146","category":"fiscal","question":"按财年和财月统计成功支付收入","relevant_docs":["example.fiscal_sales"],"required_tables":["payments","fiscal_calendar"]},
+  {"id":"r147","category":"fiscal","question":"订单时间怎样映射到财务日历？","relevant_docs":["join.fiscal_calendar"],"required_tables":["orders","fiscal_calendar"]},
+  {"id":"r148","category":"fiscal","question":"财务日历中的第1个月为什么是7月？","relevant_docs":["table.fiscal_calendar"],"required_tables":["fiscal_calendar"]},
+  {"id":"r149","category":"fulfillment","question":"仓库表的城市和大区分别是什么维度？","relevant_docs":["table.warehouses"],"required_tables":["warehouses"]},
+  {"id":"r150","category":"fulfillment","question":"按发货仓地区分析包裹运费与数量","relevant_docs":["join.shipment_warehouse"],"required_tables":["shipments","warehouses"]}
 ]

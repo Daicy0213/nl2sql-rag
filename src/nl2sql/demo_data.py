@@ -16,7 +16,7 @@ CUSTOMER_COUNT = 10_000
 PRODUCT_COUNT = 500
 ORDER_COUNT = 30_000
 SESSION_COUNT = 100_000
-SEED_VERSION = "commerce-v2-20260928"
+SEED_VERSION = "commerce-v3-20260929"
 MONEY = Decimal("0.01")
 
 REGIONS = {
@@ -33,6 +33,20 @@ CHANNELS = [
     (2, "WEB", "网页商城", "ONLINE"),
     (3, "MINI_PROGRAM", "微信小程序", "ONLINE"),
     (4, "STORE", "线下门店", "OFFLINE"),
+]
+
+WAREHOUSES = [
+    (1, "华东一号仓", "上海", "华东"),
+    (2, "华东二号仓", "杭州", "华东"),
+    (3, "华北中心仓", "北京", "华北"),
+    (4, "华南中心仓", "广州", "华南"),
+    (5, "西南中心仓", "成都", "西南"),
+    (6, "西北中心仓", "西安", "西北"),
+]
+
+SUPPLIERS = [
+    (supplier_id, f"供应商{supplier_id:02d}", list(REGIONS)[(supplier_id - 1) % len(REGIONS)], 2 + (supplier_id * 3) % 13)
+    for supplier_id in range(1, 21)
 ]
 
 TIERS = [
@@ -55,14 +69,14 @@ SUBCATEGORIES = {
 BASE_PRICES = {"数码": 420, "家居": 160, "服饰": 220, "图书": 70, "运动": 260}
 
 CAMPAIGNS = [
-    (1, "2024双十一", "PLATFORM", datetime(2024, 11, 1, tzinfo=timezone.utc), datetime(2024, 11, 12, tzinfo=timezone.utc), Decimal("0.12")),
-    (2, "2025年货节", "CATEGORY", datetime(2025, 1, 1, tzinfo=timezone.utc), datetime(2025, 1, 21, tzinfo=timezone.utc), Decimal("0.08")),
-    (3, "2025六一八", "PLATFORM", datetime(2025, 6, 1, tzinfo=timezone.utc), datetime(2025, 6, 19, tzinfo=timezone.utc), Decimal("0.10")),
-    (4, "2025双十一", "PLATFORM", datetime(2025, 11, 1, tzinfo=timezone.utc), datetime(2025, 11, 12, tzinfo=timezone.utc), Decimal("0.15")),
-    (5, "2026新春会员日", "RETENTION", datetime(2026, 2, 1, tzinfo=timezone.utc), datetime(2026, 2, 16, tzinfo=timezone.utc), Decimal("0.07")),
-    (6, "2026六一八", "PLATFORM", datetime(2026, 6, 1, tzinfo=timezone.utc), datetime(2026, 6, 19, tzinfo=timezone.utc), Decimal("0.12")),
-    (7, "2026暑期运动季", "CATEGORY", datetime(2026, 7, 1, tzinfo=timezone.utc), datetime(2026, 8, 16, tzinfo=timezone.utc), Decimal("0.06")),
-    (8, "2026新客专享", "ACQUISITION", datetime(2026, 8, 1, tzinfo=timezone.utc), datetime(2026, 9, 1, tzinfo=timezone.utc), Decimal("0.05")),
+    (1, "2024双十一", "PLATFORM", datetime(2024, 11, 1, tzinfo=timezone.utc), datetime(2024, 11, 12, tzinfo=timezone.utc), Decimal("0.12"), Decimal("980000.00")),
+    (2, "2025年货节", "CATEGORY", datetime(2025, 1, 1, tzinfo=timezone.utc), datetime(2025, 1, 21, tzinfo=timezone.utc), Decimal("0.08"), Decimal("760000.00")),
+    (3, "2025六一八", "PLATFORM", datetime(2025, 6, 1, tzinfo=timezone.utc), datetime(2025, 6, 19, tzinfo=timezone.utc), Decimal("0.10"), Decimal("1200000.00")),
+    (4, "2025双十一", "PLATFORM", datetime(2025, 11, 1, tzinfo=timezone.utc), datetime(2025, 11, 12, tzinfo=timezone.utc), Decimal("0.15"), Decimal("1500000.00")),
+    (5, "2026新春会员日", "RETENTION", datetime(2026, 2, 1, tzinfo=timezone.utc), datetime(2026, 2, 16, tzinfo=timezone.utc), Decimal("0.07"), Decimal("680000.00")),
+    (6, "2026六一八", "PLATFORM", datetime(2026, 6, 1, tzinfo=timezone.utc), datetime(2026, 6, 19, tzinfo=timezone.utc), Decimal("0.12"), Decimal("1380000.00")),
+    (7, "2026暑期运动季", "CATEGORY", datetime(2026, 7, 1, tzinfo=timezone.utc), datetime(2026, 8, 16, tzinfo=timezone.utc), Decimal("0.06"), Decimal("720000.00")),
+    (8, "2026新客专享", "ACQUISITION", datetime(2026, 8, 1, tzinfo=timezone.utc), datetime(2026, 9, 1, tzinfo=timezone.utc), Decimal("0.05"), Decimal("860000.00")),
 ]
 
 
@@ -163,6 +177,7 @@ def build_demo_data() -> dict[str, list[tuple]]:
     refund_items: list[tuple] = []
     shipments: list[tuple] = []
     order_details: dict[int, list[tuple[int, int, Decimal]]] = {}
+    order_products: dict[int, list[int]] = {}
     order_campaign: dict[int, int | None] = {}
 
     item_id = payment_id = refund_id = refund_item_id = shipment_id = 1
@@ -186,6 +201,7 @@ def build_demo_data() -> dict[str, list[tuple]]:
         order_total = shipping_fee
         order_campaign_discount = Decimal("0")
         detail_rows: list[tuple[int, int, Decimal]] = []
+        product_ids: list[int] = []
         for _ in range(rng.randint(1, 4)):
             product_id = rng.randint(1, PRODUCT_COUNT)
             product = products[product_id - 1]
@@ -197,10 +213,12 @@ def build_demo_data() -> dict[str, list[tuple]]:
             membership_discount = _money((after_campaign - final_unit_price) * quantity)
             items.append((item_id, order_id, product_id, quantity, final_unit_price, list_unit_price, campaign_discount, membership_discount, product[6]))
             detail_rows.append((item_id, quantity, final_unit_price))
+            product_ids.append(product_id)
             order_total += final_unit_price * quantity
             order_campaign_discount += campaign_discount
             item_id += 1
         order_details[order_id] = detail_rows
+        order_products[order_id] = product_ids
         if campaign:
             promotions.append((order_id, campaign[0], order_campaign_discount))
 
@@ -242,7 +260,9 @@ def build_demo_data() -> dict[str, list[tuple]]:
                 delay_days = rng.randint(1, 4) if rng.random() < 0.84 else rng.randint(6, 10)
                 delivered_at = shipped_at + timedelta(days=delay_days)
                 shipment_status = "DELIVERED"
-            shipments.append((shipment_id, order_id, shipment_no, rng.choice(["顺丰", "京东物流", "中通", "圆通"]), shipment_status, shipped_at, promised, delivered_at))
+            warehouse_id = ((order_id + shipment_no - 2) % len(WAREHOUSES)) + 1
+            freight_amount = _money(shipping_fee / shipment_count)
+            shipments.append((shipment_id, order_id, warehouse_id, shipment_no, rng.choice(["顺丰", "京东物流", "中通", "圆通"]), shipment_status, shipped_at, promised, delivered_at, freight_amount))
             shipment_id += 1
 
         if status in {"SHIPPED", "COMPLETED"} and rng.random() < 0.15:
@@ -286,14 +306,66 @@ def build_demo_data() -> dict[str, list[tuple]]:
                 spend.append((current, campaign[0], channel_id, amount, impressions, clicks))
             current += timedelta(days=1)
 
+    # Operational domains use their own RNG so extending them never changes the
+    # established commerce goldens used by the teaching evaluations.
+    extension_rng = random.Random(20260929)
+
+    fiscal_calendar: list[tuple] = []
+    calendar_date = datetime(2024, 7, 1, tzinfo=timezone.utc).date()
+    calendar_end = datetime(2026, 12, 31, tzinfo=timezone.utc).date()
+    while calendar_date <= calendar_end:
+        next_day = calendar_date + timedelta(days=1)
+        fiscal_year = calendar_date.year + (1 if calendar_date.month >= 7 else 0)
+        fiscal_month = ((calendar_date.month - 7) % 12) + 1
+        fiscal_calendar.append((calendar_date, fiscal_year, fiscal_month, next_day.month != calendar_date.month))
+        calendar_date = next_day
+
+    product_suppliers: list[tuple] = []
+    for product_id, *_product in products:
+        standard_cost = products[product_id - 1][6]
+        primary_supplier = ((product_id - 1) % len(SUPPLIERS)) + 1
+        secondary_supplier = ((product_id + 6) % len(SUPPLIERS)) + 1
+        product_suppliers.append((product_id, primary_supplier, _money(standard_cost * Decimal("0.96")), True))
+        product_suppliers.append((product_id, secondary_supplier, _money(standard_cost * Decimal("1.03")), False))
+
+    inventory_snapshots: list[tuple] = []
+    snapshot_month = datetime(2024, 10, 1, tzinfo=timezone.utc).date()
+    for _ in range(24):
+        following_month = (snapshot_month + timedelta(days=32)).replace(day=1)
+        snapshot_date = following_month - timedelta(days=1)
+        for product_id, *_product in products:
+            unit_cost = products[product_id - 1][6]
+            warehouse_ids = (
+                ((product_id - 1) % len(WAREHOUSES)) + 1,
+                ((product_id + 2) % len(WAREHOUSES)) + 1,
+            )
+            for warehouse_id in warehouse_ids:
+                on_hand_qty = 0 if extension_rng.random() < 0.035 else extension_rng.randint(8, 240)
+                inventory_snapshots.append((snapshot_date, product_id, warehouse_id, on_hand_qty, unit_cost))
+        snapshot_month = following_month
+
+    product_reviews: list[tuple] = []
+    review_id = 1
+    for order_id, _customer_id, ordered_at, status, *_rest in orders:
+        if status == "COMPLETED" and extension_rng.random() < 0.38:
+            product_id = extension_rng.choice(order_products[order_id])
+            rating = extension_rng.choices([1, 2, 3, 4, 5], weights=[3, 5, 12, 35, 45])[0]
+            created_at = ordered_at + timedelta(days=extension_rng.randint(3, 45))
+            product_reviews.append((review_id, order_id, product_id, rating, created_at))
+            review_id += 1
+
     return {
         "sales_channels": CHANNELS,
         "membership_tiers": TIERS,
         "product_categories": categories,
         "campaigns": CAMPAIGNS,
+        "warehouses": WAREHOUSES,
+        "suppliers": SUPPLIERS,
+        "fiscal_calendar": fiscal_calendar,
         "customers": customers,
         "customer_memberships": memberships,
         "products": products,
+        "product_suppliers": product_suppliers,
         "orders": orders,
         "order_items": items,
         "order_promotions": promotions,
@@ -301,6 +373,8 @@ def build_demo_data() -> dict[str, list[tuple]]:
         "refunds": refunds,
         "refund_items": refund_items,
         "shipments": shipments,
+        "inventory_snapshots": inventory_snapshots,
+        "product_reviews": product_reviews,
         "web_sessions": sessions,
         "campaign_spend_daily": spend,
     }
@@ -310,17 +384,23 @@ TABLE_COLUMNS = {
     "sales_channels": ("channel_id", "channel_code", "channel_name", "channel_group"),
     "membership_tiers": ("tier_code", "tier_name", "min_annual_spend", "discount_rate", "points_multiplier", "tier_rank"),
     "product_categories": ("category_id", "category_name", "parent_category_id", "category_level"),
-    "campaigns": ("campaign_id", "campaign_name", "campaign_type", "starts_at", "ends_at", "discount_rate"),
+    "campaigns": ("campaign_id", "campaign_name", "campaign_type", "starts_at", "ends_at", "discount_rate", "budget"),
+    "warehouses": ("warehouse_id", "warehouse_name", "city", "region"),
+    "suppliers": ("supplier_id", "supplier_name", "region", "lead_time_days"),
+    "fiscal_calendar": ("calendar_date", "fiscal_year", "fiscal_month", "is_month_end"),
     "customers": ("customer_id", "customer_name", "city", "region", "signup_at", "acquired_channel_id", "customer_segment"),
     "customer_memberships": ("membership_id", "customer_id", "tier_code", "valid_from", "valid_to", "change_reason"),
     "products": ("product_id", "product_name", "category", "list_price", "category_id", "brand", "standard_cost", "is_active"),
+    "product_suppliers": ("product_id", "supplier_id", "purchase_price", "is_primary"),
     "orders": ("order_id", "customer_id", "ordered_at", "status", "channel_id", "membership_tier_code", "shipping_fee", "currency"),
     "order_items": ("item_id", "order_id", "product_id", "quantity", "unit_price", "list_unit_price", "campaign_discount_amount", "membership_discount_amount", "cost_unit_price"),
     "order_promotions": ("order_id", "campaign_id", "allocated_discount_amount"),
     "payments": ("payment_id", "order_id", "amount", "paid_at", "status", "attempt_no", "attempted_at", "payment_method"),
     "refunds": ("refund_id", "order_id", "amount", "refunded_at", "status", "requested_at", "reason"),
     "refund_items": ("refund_item_id", "refund_id", "item_id", "quantity", "amount"),
-    "shipments": ("shipment_id", "order_id", "shipment_no", "carrier", "status", "shipped_at", "promised_delivery_at", "delivered_at"),
+    "shipments": ("shipment_id", "order_id", "warehouse_id", "shipment_no", "carrier", "status", "shipped_at", "promised_delivery_at", "delivered_at", "freight_amount"),
+    "inventory_snapshots": ("snapshot_date", "product_id", "warehouse_id", "on_hand_qty", "unit_cost"),
+    "product_reviews": ("review_id", "order_id", "product_id", "rating", "created_at"),
     "web_sessions": ("session_id", "customer_id", "channel_id", "campaign_id", "session_started_at", "traffic_source", "converted_order_id"),
     "campaign_spend_daily": ("spend_date", "campaign_id", "channel_id", "spend_amount", "impressions", "clicks"),
 }
@@ -330,9 +410,13 @@ CONFLICT_COLUMNS = {
     "membership_tiers": ("tier_code",),
     "product_categories": ("category_id",),
     "campaigns": ("campaign_id",),
+    "warehouses": ("warehouse_id",),
+    "suppliers": ("supplier_id",),
+    "fiscal_calendar": ("calendar_date",),
     "customers": ("customer_id",),
     "customer_memberships": ("membership_id",),
     "products": ("product_id",),
+    "product_suppliers": ("product_id", "supplier_id"),
     "orders": ("order_id",),
     "order_items": ("item_id",),
     "order_promotions": ("order_id", "campaign_id"),
@@ -340,6 +424,8 @@ CONFLICT_COLUMNS = {
     "refunds": ("refund_id",),
     "refund_items": ("refund_item_id",),
     "shipments": ("shipment_id",),
+    "inventory_snapshots": ("snapshot_date", "product_id", "warehouse_id"),
+    "product_reviews": ("review_id",),
     "web_sessions": ("session_id",),
     "campaign_spend_daily": ("spend_date", "campaign_id", "channel_id"),
 }
@@ -358,7 +444,7 @@ def seed_demo(*, reset: bool = False) -> dict[str, int]:
             ).fetchone()[0]
             if existing_orders and state is None and not reset:
                 raise RuntimeError(
-                    "Existing pre-v2 demo data detected. Re-run with --reset to replace "
+                    "Existing data without a seed version was detected. Re-run with --reset to replace "
                     "the generated analytics dataset explicitly."
                 )
             if state is not None and state[0] != SEED_VERSION and not reset:
@@ -369,11 +455,15 @@ def seed_demo(*, reset: bool = False) -> dict[str, int]:
                 cursor.execute(
                     """TRUNCATE TABLE
                     analytics.campaign_spend_daily, analytics.web_sessions,
+                    analytics.product_reviews, analytics.inventory_snapshots,
                     analytics.shipments, analytics.refund_items, analytics.refunds,
                     analytics.payments, analytics.order_promotions, analytics.order_items,
                     analytics.orders, analytics.customer_memberships, analytics.customers,
-                    analytics.products, analytics.product_categories, analytics.campaigns,
-                    analytics.membership_tiers, analytics.sales_channels
+                    analytics.product_suppliers, analytics.products, analytics.suppliers,
+                    analytics.warehouses, analytics.fiscal_calendar,
+                    analytics.product_categories, analytics.campaigns,
+                    analytics.membership_tiers, analytics.sales_channels,
+                    analytics.demo_seed_state
                     RESTART IDENTITY CASCADE"""
                 )
     data = build_demo_data()

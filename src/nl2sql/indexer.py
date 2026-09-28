@@ -51,7 +51,7 @@ def index_knowledge() -> tuple[int, int]:
                   priority=EXCLUDED.priority, updated_at=now()""",
                 (
                     doc.doc_id, doc.kind, doc.object_ref, doc.content,
-                    doc.aliases, doc.related_tables, "catalog-v2",
+                    doc.aliases, doc.related_tables, "catalog-v3",
                     doc.content_hash, settings.qwen_embed_model, Vector(vector),
                     Jsonb(doc.metadata), doc.priority,
                 ),

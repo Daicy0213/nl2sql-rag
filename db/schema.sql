@@ -98,7 +98,29 @@ CREATE TABLE IF NOT EXISTS analytics.campaigns (
   starts_at timestamptz NOT NULL,
   ends_at timestamptz NOT NULL,
   discount_rate numeric(5,4) NOT NULL CHECK (discount_rate >= 0 AND discount_rate < 1),
+  budget numeric(14,2) NOT NULL DEFAULT 0 CHECK (budget >= 0),
   CHECK (ends_at > starts_at)
+);
+
+CREATE TABLE IF NOT EXISTS analytics.warehouses (
+  warehouse_id integer PRIMARY KEY,
+  warehouse_name text NOT NULL,
+  city text NOT NULL,
+  region text NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS analytics.suppliers (
+  supplier_id integer PRIMARY KEY,
+  supplier_name text NOT NULL,
+  region text NOT NULL,
+  lead_time_days integer NOT NULL CHECK (lead_time_days > 0)
+);
+
+CREATE TABLE IF NOT EXISTS analytics.fiscal_calendar (
+  calendar_date date PRIMARY KEY,
+  fiscal_year integer NOT NULL,
+  fiscal_month integer NOT NULL CHECK (fiscal_month BETWEEN 1 AND 12),
+  is_month_end boolean NOT NULL
 );
 
 -- Normalize older experimental versions of these tables without dropping
@@ -122,9 +144,7 @@ DO $$ BEGIN
 EXCEPTION WHEN undefined_column THEN NULL; END $$;
 
 ALTER TABLE analytics.campaigns ADD COLUMN IF NOT EXISTS discount_rate numeric(5,4) NOT NULL DEFAULT 0;
-DO $$ BEGIN
-  ALTER TABLE analytics.campaigns ALTER COLUMN budget SET DEFAULT 0;
-EXCEPTION WHEN undefined_column THEN NULL; END $$;
+ALTER TABLE analytics.campaigns ADD COLUMN IF NOT EXISTS budget numeric(14,2) NOT NULL DEFAULT 0;
 ALTER TABLE analytics.campaigns DROP CONSTRAINT IF EXISTS campaigns_campaign_type_check;
 ALTER TABLE analytics.campaigns DROP CONSTRAINT IF EXISTS campaigns_campaign_type_v2_check;
 ALTER TABLE analytics.campaigns ADD CONSTRAINT campaigns_campaign_type_v2_check
@@ -141,12 +161,23 @@ ALTER TABLE analytics.orders ADD COLUMN IF NOT EXISTS channel_id integer REFEREN
 ALTER TABLE analytics.orders ADD COLUMN IF NOT EXISTS membership_tier_code text REFERENCES analytics.membership_tiers(tier_code);
 ALTER TABLE analytics.orders ADD COLUMN IF NOT EXISTS shipping_fee numeric(12,2) NOT NULL DEFAULT 0;
 ALTER TABLE analytics.orders ADD COLUMN IF NOT EXISTS currency text NOT NULL DEFAULT 'CNY';
+ALTER TABLE analytics.orders DROP CONSTRAINT IF EXISTS orders_channel_id_fkey;
+ALTER TABLE analytics.orders ADD CONSTRAINT orders_channel_id_fkey
+  FOREIGN KEY (channel_id) REFERENCES analytics.sales_channels(channel_id);
 ALTER TABLE analytics.order_items ADD COLUMN IF NOT EXISTS list_unit_price numeric(12,2);
 UPDATE analytics.order_items SET list_unit_price=unit_price WHERE list_unit_price IS NULL;
 ALTER TABLE analytics.order_items ALTER COLUMN list_unit_price SET NOT NULL;
 ALTER TABLE analytics.order_items ADD COLUMN IF NOT EXISTS campaign_discount_amount numeric(12,2) NOT NULL DEFAULT 0;
 ALTER TABLE analytics.order_items ADD COLUMN IF NOT EXISTS membership_discount_amount numeric(12,2) NOT NULL DEFAULT 0;
 ALTER TABLE analytics.order_items ADD COLUMN IF NOT EXISTS cost_unit_price numeric(12,2) NOT NULL DEFAULT 0;
+
+CREATE TABLE IF NOT EXISTS analytics.product_suppliers (
+  product_id integer NOT NULL REFERENCES analytics.products(product_id),
+  supplier_id integer NOT NULL REFERENCES analytics.suppliers(supplier_id),
+  purchase_price numeric(12,2) NOT NULL CHECK (purchase_price >= 0),
+  is_primary boolean NOT NULL DEFAULT false,
+  PRIMARY KEY (product_id, supplier_id)
+);
 
 CREATE TABLE IF NOT EXISTS analytics.customer_memberships (
   membership_id integer PRIMARY KEY,
@@ -202,28 +233,54 @@ CREATE TABLE IF NOT EXISTS analytics.refund_items (
 CREATE TABLE IF NOT EXISTS analytics.shipments (
   shipment_id integer PRIMARY KEY,
   order_id integer NOT NULL REFERENCES analytics.orders(order_id),
+  warehouse_id integer NOT NULL REFERENCES analytics.warehouses(warehouse_id),
   shipment_no integer NOT NULL,
   carrier text NOT NULL,
   status text NOT NULL CHECK (status IN ('PENDING','SHIPPED','DELIVERED','LOST')),
   shipped_at timestamptz,
   promised_delivery_at timestamptz,
   delivered_at timestamptz,
+  freight_amount numeric(12,2) NOT NULL DEFAULT 0 CHECK (freight_amount >= 0),
   UNIQUE (order_id, shipment_no)
 );
 
+ALTER TABLE analytics.shipments ADD COLUMN IF NOT EXISTS warehouse_id integer REFERENCES analytics.warehouses(warehouse_id);
 ALTER TABLE analytics.shipments ADD COLUMN IF NOT EXISTS shipment_no integer NOT NULL DEFAULT 1;
 ALTER TABLE analytics.shipments ADD COLUMN IF NOT EXISTS promised_delivery_at timestamptz;
+ALTER TABLE analytics.shipments ADD COLUMN IF NOT EXISTS freight_amount numeric(12,2) NOT NULL DEFAULT 0;
 ALTER TABLE analytics.shipments ALTER COLUMN shipped_at DROP NOT NULL;
 DO $$ BEGIN
   ALTER TABLE analytics.shipments ALTER COLUMN warehouse_id DROP NOT NULL;
   ALTER TABLE analytics.shipments ALTER COLUMN freight_amount SET DEFAULT 0;
 EXCEPTION WHEN undefined_column THEN NULL; END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM analytics.shipments WHERE warehouse_id IS NULL) THEN
+    ALTER TABLE analytics.shipments ALTER COLUMN warehouse_id SET NOT NULL;
+  END IF;
+END $$;
 ALTER TABLE analytics.shipments DROP CONSTRAINT IF EXISTS shipments_status_check;
 ALTER TABLE analytics.shipments DROP CONSTRAINT IF EXISTS shipments_status_v2_check;
 ALTER TABLE analytics.shipments ADD CONSTRAINT shipments_status_v2_check
   CHECK (status IN ('PENDING','SHIPPED','DELIVERED','LOST')) NOT VALID;
 ALTER TABLE analytics.shipments DROP CONSTRAINT IF EXISTS shipments_order_no_key;
 ALTER TABLE analytics.shipments ADD CONSTRAINT shipments_order_no_key UNIQUE (order_id, shipment_no);
+
+CREATE TABLE IF NOT EXISTS analytics.inventory_snapshots (
+  snapshot_date date NOT NULL,
+  product_id integer NOT NULL REFERENCES analytics.products(product_id),
+  warehouse_id integer NOT NULL REFERENCES analytics.warehouses(warehouse_id),
+  on_hand_qty integer NOT NULL CHECK (on_hand_qty >= 0),
+  unit_cost numeric(12,2) NOT NULL CHECK (unit_cost >= 0),
+  PRIMARY KEY (snapshot_date, product_id, warehouse_id)
+);
+
+CREATE TABLE IF NOT EXISTS analytics.product_reviews (
+  review_id integer PRIMARY KEY,
+  order_id integer NOT NULL REFERENCES analytics.orders(order_id),
+  product_id integer NOT NULL REFERENCES analytics.products(product_id),
+  rating integer NOT NULL CHECK (rating BETWEEN 1 AND 5),
+  created_at timestamptz NOT NULL
+);
 
 CREATE TABLE IF NOT EXISTS analytics.web_sessions (
   session_id bigint PRIMARY KEY,
@@ -259,8 +316,17 @@ CREATE INDEX IF NOT EXISTS order_items_product_id_idx ON analytics.order_items(p
 CREATE INDEX IF NOT EXISTS payments_order_id_idx ON analytics.payments(order_id);
 CREATE INDEX IF NOT EXISTS refunds_refunded_at_idx ON analytics.refunds(refunded_at);
 CREATE INDEX IF NOT EXISTS shipments_order_id_idx ON analytics.shipments(order_id);
+CREATE INDEX IF NOT EXISTS shipments_warehouse_id_idx ON analytics.shipments(warehouse_id);
 CREATE INDEX IF NOT EXISTS web_sessions_started_at_idx ON analytics.web_sessions(session_started_at);
 CREATE INDEX IF NOT EXISTS web_sessions_campaign_idx ON analytics.web_sessions(campaign_id);
+CREATE INDEX IF NOT EXISTS inventory_snapshots_product_date_idx
+  ON analytics.inventory_snapshots(product_id, snapshot_date);
+CREATE INDEX IF NOT EXISTS inventory_snapshots_warehouse_date_idx
+  ON analytics.inventory_snapshots(warehouse_id, snapshot_date);
+CREATE INDEX IF NOT EXISTS product_reviews_product_created_idx
+  ON analytics.product_reviews(product_id, created_at);
+CREATE INDEX IF NOT EXISTS product_suppliers_supplier_idx
+  ON analytics.product_suppliers(supplier_id);
 
 ALTER TABLE rag.documents ADD COLUMN IF NOT EXISTS metadata jsonb NOT NULL DEFAULT '{}';
 ALTER TABLE rag.documents ADD COLUMN IF NOT EXISTS priority integer NOT NULL DEFAULT 50;

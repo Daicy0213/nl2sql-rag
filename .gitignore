@@ -8,3 +8,4 @@ __pycache__/
 nl2sql_agent/.adk/
 *.egg-info/
 .adk/
+.virtual_documents/

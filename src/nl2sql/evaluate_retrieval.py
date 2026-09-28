@@ -4,6 +4,7 @@ import argparse
 import json
 import math
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 
 from nl2sql.retrieval import retrieve
@@ -83,17 +84,62 @@ def evaluate(cases_path: Path, strategy: str) -> tuple[RetrievalMetrics, list[di
     return metrics, failures
 
 
+def _write_reports(results: list[tuple[RetrievalMetrics, list[dict]]], json_path: Path | None, markdown_path: Path | None) -> None:
+    payload = {
+        "captured_at": date.today().isoformat(),
+        "results": [
+            {"metrics": metrics.__dict__, "failures": failures}
+            for metrics, failures in results
+        ],
+    }
+    if json_path:
+        json_path.parent.mkdir(parents=True, exist_ok=True)
+        json_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    if markdown_path:
+        lines = [
+            "# 检索评估报告",
+            "",
+            f"评估日期：{payload['captured_at']}；人工标注问题：{results[0][0].cases if results else 0} 条。",
+            "",
+            "| 策略 | Recall@5 | Recall@10 | MRR@10 | nDCG@10 | 上下文召回率 | 必需表覆盖率 |",
+            "|---|---:|---:|---:|---:|---:|---:|",
+        ]
+        for metrics, _failures in results:
+            lines.append(
+                f"| {metrics.strategy} | {metrics.recall_at_5:.4f} | {metrics.recall_at_10:.4f} | "
+                f"{metrics.mrr_at_10:.4f} | {metrics.ndcg_at_10:.4f} | "
+                f"{metrics.context_recall:.4f} | {metrics.table_coverage:.4f} |"
+            )
+        for metrics, failures in results:
+            lines.extend(["", f"## {metrics.strategy} 未完全命中（{len(failures)} 条）", ""])
+            if not failures:
+                lines.append("全部问题的相关知识与必需表均被覆盖。")
+            else:
+                for failure in failures:
+                    lines.append(
+                        f"- `{failure['id']}`：缺少知识 {failure['missing_docs']}；"
+                        f"缺少表 {failure['missing_tables']}。"
+                    )
+        markdown_path.parent.mkdir(parents=True, exist_ok=True)
+        markdown_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Evaluate labeled RAG retrieval cases")
     parser.add_argument("--cases", type=Path, default=DEFAULT_CASES)
     parser.add_argument("--strategies", nargs="+", choices=["lexical", "vector", "hybrid"], default=["lexical", "hybrid"])
     parser.add_argument("--show-failures", type=int, default=10)
+    parser.add_argument("--output-json", type=Path)
+    parser.add_argument("--output-markdown", type=Path)
     args = parser.parse_args()
+    results: list[tuple[RetrievalMetrics, list[dict]]] = []
     for strategy in args.strategies:
         metrics, failures = evaluate(args.cases, strategy)
+        results.append((metrics, failures))
         print(json.dumps(metrics.__dict__, ensure_ascii=False, indent=2))
         if args.show_failures:
             print(json.dumps(failures[: args.show_failures], ensure_ascii=False, indent=2))
+    _write_reports(results, args.output_json, args.output_markdown)
 
 
 if __name__ == "__main__":

@@ -37,15 +37,15 @@ uv run python -m nl2sql.evaluate_retrieval --strategies lexical vector hybrid
 
 `adk eval` 会真实调用 DeepSeek；分析用例还会调用 Qwen，并要求已完成数据库初始化和索引。由于自然语言输出存在变化，ADK Eval 关注工具调用路径；精确的 SQL 安全性和数据结果由 `pytest` 检查。分析 Eval 覆盖会员、单表统计、跨表关联、指标口径、营销、履约和多轮追问；安全 Eval 检查写入请求不触发任何工具。
 
-`evaluate_retrieval` 使用 120 条人工标注问题计算 Recall@5/10、MRR、nDCG、最终上下文召回率和必需表覆盖率，可直接比较纯词法、纯向量和混合检索。`vector` 与 `hybrid` 会真实调用 Qwen 查询嵌入。
+`evaluate_retrieval` 使用 150 条人工标注问题计算 Recall@5/10、MRR、nDCG、最终上下文召回率和必需表覆盖率，可直接比较纯词法、纯向量和混合检索。`vector` 与 `hybrid` 会真实调用 Qwen 查询嵌入。
 
 ## 数据与 RAG
 
-`analytics` schema 对 Agent 开放 16 张业务表，包括客户、四级会员及等级历史、商品两级分类、销售渠道、营销活动、订单与优惠、支付重试与分次支付、退款商品、拆单包裹、访问会话和活动日费用。固定随机种子生成 10,000 个客户、500 个商品、30,000 个订单、约 75,000 条订单明细和 100,000 个会话，时间覆盖 2024 年 10 月至 2026 年 9 月。
+`analytics` schema 对 Agent 开放 22 张业务表，包括客户、四级会员及等级历史、商品两级分类、销售渠道、营销活动、订单与优惠、支付重试与分次支付、退款商品、拆单包裹、访问会话、活动日费用、仓库、供应商、商品供货关系、库存快照、商品评价和财务日历。固定随机种子生成 10,000 个客户、500 个商品、30,000 个订单、约 75,000 条订单明细、100,000 个会话、24,000 条库存快照和 7,699 条商品评价，时间覆盖 2024 年 10 月至 2026 年 9 月。
 
 会员等级为普通、黄金、白金和钻石，对应会员减免率 0%、5%、10% 和 15%，并保存等级有效期历史与下单时快照。种子数据还包含季节性活动、会员升级、活动后叠加会员折扣、支付失败重试、分次支付、部分退款、跨月退款、拆单配送和延迟送达等可重复业务场景。
 
-`db/knowledge/` 包含 100 余张分域知识卡：表说明、指标口径、关联规则、枚举、歧义词和已审核 SQL 思路。索引器追加实时字段清单，对内容及依赖元数据计算哈希，只重新向量化变化文档。入库调用 Qwen `text_type=document`，查询调用 `text_type=query`，固定 1024 维；运行时结合 pgvector 余弦相似度、显式别名匹配、加权 RRF 和知识依赖扩展。可用 `ENABLE_RAG_RERANK=true` 打开候选重排实验。模型或维度变化需要重建索引和相应数据库列。
+`db/knowledge/` 包含 142 张分域知识卡：表说明、指标口径、关联规则、枚举、歧义词和已审核 SQL 思路。索引器追加实时字段清单，对内容及依赖元数据计算哈希，只重新向量化变化文档。入库调用 Qwen `text_type=document`，查询调用 `text_type=query`，固定 1024 维；运行时结合 pgvector 余弦相似度、显式别名匹配、加权 RRF 和知识依赖扩展。可用 `ENABLE_RAG_RERANK=true` 打开候选重排实验。模型或维度变化需要重建索引和相应数据库列。
 
 本项目使用 DashScope 原生 Embedding API，以支持 `query`/`document` 区分。百炼业务空间专用 Host 的配置格式为 `https://<workspace-id>.<region>.maas.aliyuncs.com/api/v1`。OpenAI 兼容地址末尾的 `/compatible-mode/v1` 不能直接作为 `DASHSCOPE_BASE_URL`；应改为 `/api/v1`。
 
@@ -55,7 +55,7 @@ uv run python -m nl2sql.evaluate_retrieval --strategies lexical vector hybrid
 
 - `nl2sql_agent/`：ADK 入口和函数工具。
 - `src/nl2sql/`：应用配置、数据库、Embedding、索引、检索和安全执行。
-- `db/`：DDL 与按领域拆分的知识目录。
+- `db/`：DDL、全表字段注释、SQL 数据导出与按领域拆分的知识目录。
 - `tests/`：单元、集成和 ADK Eval 用例。
 - `tutorial/`：分章节 Notebook、阅读路线和每章工程练习。
 
